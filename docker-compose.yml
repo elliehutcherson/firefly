@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: firefly
+      POSTGRES_PASSWORD: firefly
+      POSTGRES_DB: firefly
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U firefly -d firefly"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Opt-in: `docker compose --profile app up`. Local dev usually runs the
+  # binary directly against the compose db.
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    profiles: [app]
+    environment:
+      FIREFLY_BIND: 0.0.0.0
+      FIREFLY_PORT: "8080"
+      DATABASE_URL: postgres://firefly:firefly@db:5432/firefly
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dbdata:

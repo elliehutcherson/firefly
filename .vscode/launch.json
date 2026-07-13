@@ -5,11 +5,13 @@
       "name": "Debug firefly",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/src/firefly",
+      "program": "${workspaceFolder}/build/bin/firefly",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
-      "environment": [],
+      "environment": [
+        { "name": "FIREFLY_PORT", "value": "18080" }
+      ],
       "externalConsole": false,
       "MIMode": "gdb",
       "miDebuggerPath": "/usr/bin/gdb",
@@ -23,10 +25,10 @@
       "preLaunchTask": "cmake: build"
     },
     {
-      "name": "Debug greeting_test",
+      "name": "Debug config_test",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/tests/greeting_test",
+      "program": "${workspaceFolder}/build/bin/config_test",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

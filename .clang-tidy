@@ -6,3 +6,8 @@ Checks: >
   modernize-*,
   -modernize-use-trailing-return-type
 HeaderFilterRegex: '^src/|^tests/'
+CheckOptions:
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: '^db$'
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: '^db$'

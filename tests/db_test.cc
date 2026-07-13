@@ -1,0 +1,78 @@
+#include "src/common/db.h"
+
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "absl/status/status.h"
+#include "gtest/gtest.h"
+#include "src/common/config.h"
+#include "tests/status_matchers.h"
+
+namespace firefly {
+namespace {
+
+using ::absl_testing::StatusIs;
+
+// Integration tests against the docker-compose Postgres. Skipped when no
+// database is reachable (start one with: docker compose up -d db).
+class DbTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    absl::StatusOr<std::unique_ptr<Db>> db =
+        Db::Open(Config::FromEnv().database_url, /*pool_size=*/2);
+    if (!db.ok()) {
+      GTEST_SKIP() << "database unavailable: " << db.status();
+    }
+    db_ = std::move(*db);
+  }
+
+  std::unique_ptr<Db> db_;
+};
+
+TEST_F(DbTest, Ping) { EXPECT_OK(db_->Ping()); }
+
+TEST_F(DbTest, QueryReturnsRows) {
+  absl::StatusOr<Rows> rows = db_->Query("SELECT 1 + 1, 'hello'");
+  ASSERT_OK(rows);
+  ASSERT_EQ(rows->size(), 1);
+  ASSERT_EQ((*rows)[0].columns.size(), 2);
+  EXPECT_EQ((*rows)[0].columns[0], "2");
+  EXPECT_EQ((*rows)[0].columns[1], "hello");
+}
+
+TEST_F(DbTest, BindsParametersAndNull) {
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT $1::text, $2::text", {"world", std::nullopt});
+  ASSERT_OK(rows);
+  ASSERT_EQ(rows->size(), 1);
+  EXPECT_EQ((*rows)[0].columns[0], "world");
+  EXPECT_EQ((*rows)[0].columns[1], std::nullopt);
+}
+
+TEST_F(DbTest, InvalidSqlIsInvalidArgument) {
+  EXPECT_THAT(db_->Query("SELECT FROM WHERE"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(DbTest, MigrationsApplied) {
+  // schema_migrations exists once scripts/migrate.sh has run.
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT count(*) FROM schema_migrations");
+  ASSERT_OK(rows);
+  EXPECT_NE((*rows)[0].columns[0], "0");
+}
+
+TEST(DbOpenTest, BadUrlIsUnavailable) {
+  EXPECT_THAT(
+      Db::Open("postgres://nobody:wrong@localhost:1/none", /*pool_size=*/1),
+      StatusIs(absl::StatusCode::kUnavailable));
+}
+
+TEST(DbOpenTest, RejectsNonPositivePoolSize) {
+  EXPECT_THAT(Db::Open("postgres://localhost/x", /*pool_size=*/0),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+}  // namespace
+}  // namespace firefly

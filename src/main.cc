@@ -1,8 +1,27 @@
-#include <iostream>
+#include <memory>
 
-#include "src/greeting.h"
+#include "absl/log/initialize.h"
+#include "absl/log/log.h"
+#include "src/api/server.h"
+#include "src/common/config.h"
+#include "src/common/db.h"
 
 int main() {
-  std::cout << firefly::MakeGreeting("world") << std::endl;
+  absl::InitializeLog();
+
+  firefly::Config config = firefly::Config::FromEnv();
+
+  absl::StatusOr<std::unique_ptr<firefly::Db>> db =
+      firefly::Db::Open(config.database_url);
+  if (!db.ok()) {
+    LOG(ERROR) << "failed to open database: " << db.status();
+    LOG(ERROR) << "is it running? try: docker compose up -d db";
+    return 1;
+  }
+
+  LOG(INFO) << "firefly listening on " << config.bind_address << ":"
+            << config.port;
+  firefly::Server server(config, db->get());
+  server.Run();
   return 0;
 }
