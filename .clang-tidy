@@ -1,0 +1,8 @@
+Checks: >
+  -*,
+  google-*,
+  readability-*,
+  performance-*,
+  modernize-*,
+  -modernize-use-trailing-return-type
+HeaderFilterRegex: '^src/|^tests/'
