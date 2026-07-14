@@ -1,5 +1,6 @@
 #include "src/marketdata/alpaca.h"
 
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -25,8 +26,9 @@ constexpr int kMaxSymbolLength = 10;
 // Alpaca's maximum; a year of daily bars or a day of minute bars fits in one
 // page, so pagination only matters for multi-year backfills.
 constexpr char kBarLimit[] = "10000";
-constexpr int kMaxBarPages = 100;
 constexpr int kMaxErrorBodyLength = 200;
+// Largest price NUMERIC(14,4) can hold: 10 integer digits.
+constexpr double kMaxPriceDollars = 1e10;
 
 constexpr int kHttpOk = 200;
 constexpr int kHttpUnauthorized = 401;
@@ -37,8 +39,12 @@ constexpr int kHttpTooManyRequests = 429;
 constexpr int kHttpServerError = 500;
 
 // Uppercase letters plus '.' and '-' (BRK.B). Callers normalize case.
+// Must start with a letter so ".." can never reach the URL path.
 bool IsValidSymbol(const std::string& symbol) {
   if (symbol.empty() || symbol.size() > kMaxSymbolLength) {
+    return false;
+  }
+  if (!absl::ascii_isupper(symbol.front())) {
     return false;
   }
   for (const char c : symbol) {
@@ -132,7 +138,14 @@ absl::StatusOr<int64_t> PriceField(const json& object, const std::string& key) {
     return absl::InternalError(
         absl::StrCat("alpaca field '", key, "' is not a number"));
   }
-  return PriceE4FromDouble(value->get<double>());
+  const double price = value->get<double>();
+  // NUMERIC(14,4) tops out below 1e10 dollars; beyond that the e4 conversion
+  // would overflow and a garbage price is worse than an error.
+  if (!std::isfinite(price) || std::abs(price) >= kMaxPriceDollars) {
+    return absl::InternalError(
+        absl::StrCat("alpaca field '", key, "' is out of range"));
+  }
+  return PriceE4FromDouble(price);
 }
 
 absl::StatusOr<Bar> ParseBar(const json& bar_json) {
@@ -217,6 +230,11 @@ absl::StatusOr<std::vector<Bar>> AlpacaProvider::FetchBars(
       return bars;
     }
     page_token = token_json->get<std::string>();
+    // An empty token would silently re-fetch the same page (the page_token
+    // param is only sent when non-empty); treat it as end-of-data.
+    if (page_token.empty()) {
+      return bars;
+    }
   }
   return absl::InternalError("alpaca pagination did not terminate");
 }

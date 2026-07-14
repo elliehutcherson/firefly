@@ -7,6 +7,7 @@
 #include "absl/status/status.h"
 #include "gtest/gtest.h"
 #include "src/common/config.h"
+#include "src/common/money.h"
 #include "tests/status_matchers.h"
 
 namespace firefly {
@@ -20,7 +21,7 @@ class DbTest : public ::testing::Test {
  protected:
   void SetUp() override {
     absl::StatusOr<std::unique_ptr<Db>> db =
-        Db::Open(Config::FromEnv().database_url, /*pool_size=*/2);
+        OpenDb(Config::FromEnv().database_url, /*pool_size=*/2);
     if (!db.ok()) {
       GTEST_SKIP() << "database unavailable: " << db.status();
     }
@@ -55,6 +56,14 @@ TEST_F(DbTest, InvalidSqlIsInvalidArgument) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST_F(DbTest, NumericRoundTripsPriceE4) {
+  // Pins the money.h contract: e4 prices survive NUMERIC(14,4) exactly.
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT $1::numeric(14,4)", {PriceE4ToString(1899550)});
+  ASSERT_OK(rows);
+  EXPECT_EQ((*rows)[0].columns[0], "189.9550");
+}
+
 TEST_F(DbTest, MigrationsApplied) {
   // schema_migrations exists once scripts/migrate.sh has run.
   absl::StatusOr<Rows> rows =
@@ -65,12 +74,12 @@ TEST_F(DbTest, MigrationsApplied) {
 
 TEST(DbOpenTest, BadUrlIsUnavailable) {
   EXPECT_THAT(
-      Db::Open("postgres://nobody:wrong@localhost:1/none", /*pool_size=*/1),
+      OpenDb("postgres://nobody:wrong@localhost:1/none", /*pool_size=*/1),
       StatusIs(absl::StatusCode::kUnavailable));
 }
 
 TEST(DbOpenTest, RejectsNonPositivePoolSize) {
-  EXPECT_THAT(Db::Open("postgres://localhost/x", /*pool_size=*/0),
+  EXPECT_THAT(OpenDb("postgres://localhost/x", /*pool_size=*/0),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

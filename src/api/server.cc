@@ -40,18 +40,26 @@ crow::response JsonResponse(int code, const nlohmann::json& body) {
 }
 
 crow::response Healthz(Db& db) {
-  absl::Status db_status = db.Ping();
-  if (!db_status.ok()) {
-    LOG(WARNING) << "healthz: db ping failed: " << db_status;
-    return JsonResponse(kStatusServiceUnavailable,
+  const HealthReport report = CheckHealth(db);
+  if (!report.db_ok) {
+    return JsonResponse(report.http_status,
                         {{"status", "degraded"}, {"db", "unavailable"}});
   }
-  return JsonResponse(kStatusOk, {{"status", "ok"}, {"db", "ok"}});
+  return JsonResponse(report.http_status, {{"status", "ok"}, {"db", "ok"}});
 }
 
 crow::response Ping() { return JsonResponse(kStatusOk, {{"pong", true}}); }
 
 }  // namespace
+
+HealthReport CheckHealth(Db& db) {
+  absl::Status db_status = db.Ping();
+  if (!db_status.ok()) {
+    LOG(WARNING) << "healthz: db ping failed: " << db_status;
+    return {.http_status = kStatusServiceUnavailable, .db_ok = false};
+  }
+  return {.http_status = kStatusOk, .db_ok = true};
+}
 
 Server::Server(Config config, Db* db) : config_(std::move(config)), db_(db) {}
 

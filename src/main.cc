@@ -12,7 +12,7 @@ int main() {
   firefly::Config config = firefly::Config::FromEnv();
 
   absl::StatusOr<std::unique_ptr<firefly::Db>> db =
-      firefly::Db::Open(config.database_url);
+      firefly::OpenDb(config.database_url);
   if (!db.ok()) {
     LOG(ERROR) << "failed to open database: " << db.status();
     LOG(ERROR) << "is it running? try: docker compose up -d db";

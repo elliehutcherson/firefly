@@ -73,35 +73,44 @@ Rows ToRows(const pqxx::result& result) {
   return rows;
 }
 
+// The pqxx-backed Db. Lives here so no other module sees pqxx types.
+class PqxxDb : public Db {
+ public:
+  explicit PqxxDb(std::unique_ptr<DbPool> pool) : pool_(std::move(pool)) {}
+
+  using Db::Execute;
+  using Db::Query;
+
+  absl::StatusOr<Rows> Query(const std::string& sql,
+                             const DbParams& params) override {
+    ASSIGN_OR_RETURN(pqxx::result result, Exec(*pool_, sql, params));
+    return ToRows(result);
+  }
+
+  absl::StatusOr<int64_t> Execute(const std::string& sql,
+                                  const DbParams& params) override {
+    ASSIGN_OR_RETURN(pqxx::result result, Exec(*pool_, sql, params));
+    return static_cast<int64_t>(result.affected_rows());
+  }
+
+  absl::Status Ping() override { return Query("SELECT 1").status(); }
+
+ private:
+  std::unique_ptr<DbPool> pool_;
+};
+
 }  // namespace
 
-absl::StatusOr<std::unique_ptr<Db>> Db::Open(const std::string& database_url,
-                                             int pool_size) {
+absl::StatusOr<std::unique_ptr<Db>> OpenDb(const std::string& database_url,
+                                           int pool_size) {
   if (pool_size < 1) {
     return absl::InvalidArgumentError("pool_size must be at least 1");
   }
-  auto db = std::unique_ptr<Db>(
-      new Db(std::make_unique<DbPool>(database_url, pool_size)));
+  auto db = std::make_unique<PqxxDb>(
+      std::make_unique<DbPool>(database_url, pool_size));
   RETURN_IF_ERROR(db->Ping());
   LOG(INFO) << "database pool ready (max " << pool_size << " connections)";
   return db;
 }
-
-Db::Db(std::unique_ptr<DbPool> pool) : pool_(std::move(pool)) {}
-
-Db::~Db() = default;
-
-absl::StatusOr<Rows> Db::Query(const std::string& sql, const DbParams& params) {
-  ASSIGN_OR_RETURN(pqxx::result result, Exec(*pool_, sql, params));
-  return ToRows(result);
-}
-
-absl::StatusOr<int64_t> Db::Execute(const std::string& sql,
-                                    const DbParams& params) {
-  ASSIGN_OR_RETURN(pqxx::result result, Exec(*pool_, sql, params));
-  return static_cast<int64_t>(result.affected_rows());
-}
-
-absl::Status Db::Ping() { return Query("SELECT 1").status(); }
 
 }  // namespace firefly

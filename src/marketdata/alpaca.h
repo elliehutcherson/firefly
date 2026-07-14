@@ -25,8 +25,12 @@ struct AlpacaConfig {
 // are split-adjusted so charts don't show cliffs at stock splits.
 class AlpacaProvider : public MarketDataProvider {
  public:
+  // Pagination safety bound for bar fetches; a multi-year daily backfill
+  // fits well within it at Alpaca's 10000-bar page limit.
+  static constexpr int kMaxBarPages = 100;
+
   // `http` is borrowed and must outlive the provider.
-  AlpacaProvider(AlpacaConfig config, HttpClient* http);
+  explicit AlpacaProvider(AlpacaConfig config, HttpClient* http);
 
   absl::StatusOr<Trade> GetLatestTrade(const std::string& symbol) override;
   absl::StatusOr<std::vector<Bar>> GetDailyBars(const std::string& symbol,

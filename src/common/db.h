@@ -22,45 +22,43 @@ using Rows = std::vector<Row>;
 // Positional statement parameters ($1, $2, ...); nullopt binds SQL NULL.
 using DbParams = std::vector<std::optional<std::string>>;
 
-// Defined in db_pool.h; owns the pqxx connections. Forward-declared here so
-// including db.h never pulls in pqxx headers.
-class DbPool;
-
-// Postgres access behind a fixed-size connection pool. This is the only
+// Postgres access behind a project-owned interface; this is the single place
+// to fake in tests. The pqxx-backed implementation lives in db.cc — the only
 // module that touches libpqxx; its exceptions are translated to absl::Status
-// here and never escape (see docs/STYLE.md). Thread-safe: calls block until
-// a pooled connection is free.
+// there and never escape (see docs/STYLE.md).
 class Db {
  public:
   static constexpr int kDefaultPoolSize = 4;
 
-  // Connects eagerly (fails fast on a bad URL or unreachable server).
-  static absl::StatusOr<std::unique_ptr<Db>> Open(
-      const std::string& database_url, int pool_size = kDefaultPoolSize);
-
-  Db(const Db&) = delete;
-  Db& operator=(const Db&) = delete;
-  ~Db();
+  virtual ~Db() = default;
 
   // Runs one statement in its own transaction and returns the result rows.
-  absl::StatusOr<Rows> Query(const std::string& sql,
-                             const DbParams& params = {});
+  virtual absl::StatusOr<Rows> Query(const std::string& sql,
+                                     const DbParams& params) = 0;
 
   // Runs one statement in its own transaction; returns affected row count.
-  absl::StatusOr<int64_t> Execute(const std::string& sql,
-                                  const DbParams& params = {});
+  virtual absl::StatusOr<int64_t> Execute(const std::string& sql,
+                                          const DbParams& params) = 0;
 
   // Cheap connectivity check (SELECT 1).
-  absl::Status Ping();
+  virtual absl::Status Ping() = 0;
+
+  // Parameterless conveniences; overloads rather than default arguments
+  // because defaults are banned on virtual functions.
+  absl::StatusOr<Rows> Query(const std::string& sql) { return Query(sql, {}); }
+  absl::StatusOr<int64_t> Execute(const std::string& sql) {
+    return Execute(sql, {});
+  }
 
   // TODO: multi-statement transaction support (SELECT ... FOR UPDATE flows)
   // arrives with the trading module.
-
- private:
-  explicit Db(std::unique_ptr<DbPool> pool);
-
-  std::unique_ptr<DbPool> pool_;
 };
+
+// Production Db backed by a fixed-size libpqxx connection pool. Connects
+// eagerly (fails fast on a bad URL or unreachable server). Thread-safe:
+// calls block until a pooled connection is free.
+absl::StatusOr<std::unique_ptr<Db>> OpenDb(
+    const std::string& database_url, int pool_size = Db::kDefaultPoolSize);
 
 }  // namespace firefly
 
