@@ -4,7 +4,7 @@
     {
       "label": "cmake: configure",
       "type": "shell",
-      "command": "cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+      "command": "cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
       "problemMatcher": []
     },
     {

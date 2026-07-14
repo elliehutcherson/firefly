@@ -22,6 +22,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# On macOS the system libraries come from Homebrew, and libpq/curl are keg-only
+# (not symlinked into the brew prefix), so find_package/pkg-config can't see
+# them without an explicit hint. Add each formula's prefix to the search paths.
+if(APPLE)
+  find_program(FIREFLY_BREW brew)
+  if(FIREFLY_BREW)
+    foreach(_pkg libpq curl libsodium)
+      execute_process(COMMAND ${FIREFLY_BREW} --prefix ${_pkg}
+          OUTPUT_VARIABLE _pkg_prefix OUTPUT_STRIP_TRAILING_WHITESPACE
+          RESULT_VARIABLE _pkg_rc ERROR_QUIET)
+      if(_pkg_rc EQUAL 0 AND _pkg_prefix)
+        list(APPEND CMAKE_PREFIX_PATH "${_pkg_prefix}")
+        set(ENV{PKG_CONFIG_PATH} "${_pkg_prefix}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+      endif()
+    endforeach()
+  endif()
+endif()
+
 # ## System C libraries (stable ABI, not worth building in-tree).
 # Everything else is a git submodule under include/ — see docs/ARCHITECTURE.md.
 find_package(PostgreSQL QUIET)
@@ -31,9 +49,13 @@ if(PkgConfig_FOUND)
   pkg_check_modules(SODIUM QUIET libsodium)
 endif()
 if(NOT PostgreSQL_FOUND OR NOT CURL_FOUND OR NOT SODIUM_FOUND)
-  message(FATAL_ERROR
-      "Missing system libraries. Install them with:\n"
-      "  sudo apt install pkg-config libpq-dev libcurl4-openssl-dev libsodium-dev")
+  if(APPLE)
+    set(_install_hint "  brew install pkg-config libpq curl libsodium")
+  else()
+    set(_install_hint
+        "  sudo apt install pkg-config libpq-dev libcurl4-openssl-dev libsodium-dev")
+  endif()
+  message(FATAL_ERROR "Missing system libraries. Install them with:\n${_install_hint}")
 endif()
 
 # googletest must precede abseil: abseil's test helpers (absl::status_matchers

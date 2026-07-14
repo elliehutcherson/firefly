@@ -10,7 +10,16 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and
 
 ```sh
 git clone --recurse-submodules <repo-url>
+```
+
+Install the system libraries (everything else is vendored as a submodule):
+
+```sh
+# Debian/Ubuntu
 sudo apt install pkg-config libpq-dev libcurl4-openssl-dev libsodium-dev
+
+# macOS (Homebrew)
+brew install cmake pkg-config libpq curl libsodium
 ```
 
 ## Build & test

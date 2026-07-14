@@ -3,12 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-GENERATOR="Unix Makefiles"
-if command -v ninja >/dev/null 2>&1; then
-  GENERATOR="Ninja"
-fi
-
-cmake -S . -B build -G "$GENERATOR" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build build
 
 # Tests labeled e2e (real Alpaca API, real Postgres) are excluded unless
