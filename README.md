@@ -33,7 +33,9 @@ brew install cmake pkg-config libpq curl libsodium
 Podman and Docker both work; scripts auto-detect (podman preferred, override
 with `CONTAINER_ENGINE=docker|podman`). With podman, install the
 `docker-compose` provider too (`brew install docker-compose`) — not
-podman-compose.
+podman-compose. The podman machine defaults to 2 GB of memory, which OOMs
+the containerized C++ build; give it more before using run_container.sh:
+`podman machine set --memory 8192` (while stopped).
 
 ```sh
 podman compose up -d db      # start Postgres (or: docker compose up -d db)
