@@ -3,17 +3,19 @@
 # files in schema_migrations. Each migration runs in a single transaction.
 #
 # Uses local psql with $DATABASE_URL if available, otherwise falls back to
-# psql inside the docker-compose db container.
+# psql inside the compose db container (podman or docker; see engine.sh).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+source scripts/engine.sh
 
 DATABASE_URL="${DATABASE_URL:-postgres://firefly:firefly@localhost:5432/firefly}"
 
 if command -v psql >/dev/null 2>&1; then
   PSQL=(psql "$DATABASE_URL")
 else
-  PSQL=(docker compose exec -T db psql -U firefly -d firefly)
+  ENGINE="$(container_engine)"
+  PSQL=("$ENGINE" compose exec -T db psql -U firefly -d firefly)
 fi
 
 run_sql() { "${PSQL[@]}" -v ON_ERROR_STOP=1 -qAt "$@"; }

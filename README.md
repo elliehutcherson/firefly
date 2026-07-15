@@ -30,8 +30,13 @@ brew install cmake pkg-config libpq curl libsodium
 
 ## Run locally
 
+Podman and Docker both work; scripts auto-detect (podman preferred, override
+with `CONTAINER_ENGINE=docker|podman`). With podman, install the
+`docker-compose` provider too (`brew install docker-compose`) — not
+podman-compose.
+
 ```sh
-docker compose up -d db      # start Postgres
+podman compose up -d db      # start Postgres (or: docker compose up -d db)
 ./scripts/migrate.sh         # apply migrations/*.sql
 ./build/bin/firefly          # listens on 127.0.0.1:8080
 curl localhost:8080/healthz
@@ -40,7 +45,7 @@ curl localhost:8080/healthz
 Configuration is via environment variables: `FIREFLY_BIND`, `FIREFLY_PORT`,
 `DATABASE_URL` (see `src/common/config.h` for defaults).
 
-### Run fully in Docker
+### Run fully in containers
 
 No local toolchain needed — builds the app image, starts Postgres, applies
 migrations, and runs the service in a container:
