@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+
 // Fixed-point money conventions (see docs/STYLE.md, "Integer types"):
 //
 //   * Cash amounts are integer cents: int64_t fields named *_cents.
@@ -24,6 +27,11 @@ int64_t PriceE4FromDouble(double price);
 // Formats with exactly four decimals ("189.9550"), the text form Postgres
 // NUMERIC(14,4) accepts.
 std::string PriceE4ToString(int64_t price_e4);
+
+// Parses the text form Postgres NUMERIC(14,4) emits ("189.9550", "12",
+// "-0.005"). InvalidArgument on junk, more than four decimals, or overflow.
+// The inverse of PriceE4ToString; how prices come back from Db::Query.
+absl::StatusOr<int64_t> PriceE4FromString(absl::string_view text);
 
 }  // namespace firefly
 

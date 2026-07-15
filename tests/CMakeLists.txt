@@ -37,6 +37,22 @@ add_executable(server_test server_test.cc)
 target_link_libraries(server_test PRIVATE firefly_test_support)
 gtest_discover_tests(server_test)
 
+add_executable(instrument_repo_test instrument_repo_test.cc)
+target_link_libraries(instrument_repo_test PRIVATE firefly_test_support)
+gtest_discover_tests(instrument_repo_test)
+
+add_executable(candle_repo_test candle_repo_test.cc)
+target_link_libraries(candle_repo_test PRIVATE firefly_test_support)
+gtest_discover_tests(candle_repo_test)
+
+add_executable(daily_bar_sync_test daily_bar_sync_test.cc)
+target_link_libraries(daily_bar_sync_test PRIVATE firefly_test_support)
+gtest_discover_tests(daily_bar_sync_test)
+
+add_executable(job_runner_test job_runner_test.cc)
+target_link_libraries(job_runner_test PRIVATE firefly_test_support)
+gtest_discover_tests(job_runner_test)
+
 # Hits the real Alpaca API; self-skips without APCA_API_KEY_ID /
 # APCA_API_SECRET_KEY in the environment.
 add_executable(alpaca_e2e_test e2e/alpaca_e2e_test.cc)

@@ -3,11 +3,15 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/time/civil_time.h"
 #include "gtest/gtest.h"
 #include "src/common/config.h"
 #include "src/common/money.h"
+#include "src/marketdata/candle_repo.h"
 #include "tests/status_matchers.h"
 
 namespace firefly {
@@ -79,6 +83,54 @@ TEST_F(DbTest, InstrumentUniverseSeeded) {
   ASSERT_OK(rows);
   ASSERT_TRUE((*rows)[0].columns[0].has_value());
   EXPECT_GE(std::stoi(*(*rows)[0].columns[0]), 500);
+}
+
+TEST_F(DbTest, CandleRepoRoundTripsThroughRealPostgres) {
+  // Exercises the unnest batch insert, the ON CONFLICT idempotence, and the
+  // NUMERIC(14,4) -> e4 read path against a real database. Uses 1970 dates
+  // so it can never collide with backfilled market data; AAPL exists via the
+  // seed migration (candles_daily has a foreign key on instruments).
+  CandleRepo repo(db_.get());
+  const absl::CivilDay kDay1(1970, 1, 2);
+  const absl::CivilDay kDay2(1970, 1, 5);
+  ASSERT_OK(db_->Execute(
+      "DELETE FROM candles_daily WHERE symbol = 'AAPL' AND day < '1971-01-01'"));
+
+  const std::vector<DailyCandle> candles = {{.day = kDay1,
+                                             .open_e4 = 1899550,
+                                             .high_e4 = 1910000,
+                                             .low_e4 = 1885000,
+                                             .close_e4 = 1901200,
+                                             .volume = 48210000},
+                                            {.day = kDay2,
+                                             .open_e4 = 1905000,
+                                             .high_e4 = 1920000,
+                                             .low_e4 = 1900000,
+                                             .close_e4 = 1917500,
+                                             .volume = 51000000}};
+  ASSERT_OK(repo.UpsertCandles("AAPL", candles));
+  // Idempotent: re-inserting the same days is a no-op, not an error.
+  ASSERT_OK(repo.UpsertCandles("AAPL", candles));
+
+  absl::StatusOr<std::vector<DailyCandle>> stored =
+      repo.GetRange("AAPL", kDay1, kDay2);
+  ASSERT_OK(stored);
+  ASSERT_EQ(stored->size(), 2);
+  EXPECT_EQ((*stored)[0].day, kDay1);
+  EXPECT_EQ((*stored)[0].open_e4, 1899550);
+  EXPECT_EQ((*stored)[0].close_e4, 1901200);
+  EXPECT_EQ((*stored)[0].volume, 48210000);
+  EXPECT_EQ((*stored)[1].day, kDay2);
+  EXPECT_EQ((*stored)[1].high_e4, 1920000);
+
+  absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>> latest =
+      repo.LatestDays();
+  ASSERT_OK(latest);
+  ASSERT_TRUE(latest->contains("AAPL"));
+  EXPECT_GE(latest->at("AAPL"), kDay2);
+
+  ASSERT_OK(db_->Execute(
+      "DELETE FROM candles_daily WHERE symbol = 'AAPL' AND day < '1971-01-01'"));
 }
 
 TEST(DbOpenTest, BadUrlIsUnavailable) {
