@@ -1,6 +1,7 @@
 #ifndef FIREFLY_API_SERVER_H_
 #define FIREFLY_API_SERVER_H_
 
+#include "src/api/market_handlers.h"
 #include "src/common/config.h"
 #include "src/common/db.h"
 
@@ -16,17 +17,22 @@ struct HealthReport {
 // Pings the database and maps the result to a health report.
 HealthReport CheckHealth(Db& db);
 
+// Everything the routes need; all borrowed, must outlive the server.
+struct ServerDeps {
+  Db* db = nullptr;
+  MarketDeps market;
+};
+
 class Server {
  public:
-  // `db` is borrowed and must outlive the server.
-  Server(Config config, Db* db);
+  Server(Config config, ServerDeps deps);
 
   // Registers routes and runs the HTTP server. Blocks until shutdown.
   void Run();
 
  private:
   Config config_;
-  Db* db_;
+  ServerDeps deps_;
 };
 
 }  // namespace firefly

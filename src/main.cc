@@ -14,6 +14,7 @@
 #include "src/jobs/daily_bar_sync.h"
 #include "src/jobs/job_runner.h"
 #include "src/marketdata/alpaca.h"
+#include "src/marketdata/cached_provider.h"
 #include "src/marketdata/candle_repo.h"
 #include "src/marketdata/instrument_repo.h"
 
@@ -44,19 +45,22 @@ int main() {
   // Market data plumbing; declaration order is teardown order in reverse, so
   // the job runner (destroyed first) may use everything above it.
   const std::unique_ptr<firefly::Clock> clock = firefly::CreateSystemClock();
+  firefly::InstrumentRepo instruments(db->get());
+  firefly::CandleRepo candles(db->get());
   std::unique_ptr<firefly::HttpClient> http;
-  std::unique_ptr<firefly::AlpacaProvider> provider;
-  std::unique_ptr<firefly::InstrumentRepo> instruments;
-  std::unique_ptr<firefly::CandleRepo> candles;
+  std::unique_ptr<firefly::AlpacaProvider> alpaca;
+  std::unique_ptr<firefly::CachedProvider> provider;
   std::unique_ptr<firefly::JobRunner> bar_sync;
   if (!config.alpaca_key_id.empty() && !config.alpaca_secret_key.empty()) {
     http = firefly::CreateHttpClient();
-    provider = std::make_unique<firefly::AlpacaProvider>(
+    alpaca = std::make_unique<firefly::AlpacaProvider>(
         firefly::AlpacaConfig{.key_id = config.alpaca_key_id,
                               .secret_key = config.alpaca_secret_key},
         http.get());
-    instruments = std::make_unique<firefly::InstrumentRepo>(db->get());
-    candles = std::make_unique<firefly::CandleRepo>(db->get());
+    // Request-time callers go through the cache; the sync job's daily bars
+    // pass through it unchanged.
+    provider = std::make_unique<firefly::CachedProvider>(
+        alpaca.get(), clock.get(), firefly::CacheOptions{});
     bar_sync = std::make_unique<firefly::JobRunner>(
         "daily_bar_sync", absl::Hours(1), [&] {
           firefly::DailyBarSyncOptions options;
@@ -64,7 +68,7 @@ int main() {
               absl::ToCivilDay(clock->Now(), firefly::NewYorkTimeZone()) -
               kJobLookbackDays;
           const absl::StatusOr<firefly::DailyBarSyncStats> stats =
-              firefly::SyncDailyBars(*instruments, *candles, *provider, *clock,
+              firefly::SyncDailyBars(instruments, candles, *provider, *clock,
                                      options);
           if (!stats.ok()) {
             LOG(ERROR) << "daily bar sync: " << stats.status();
@@ -83,7 +87,12 @@ int main() {
 
   LOG(INFO) << "firefly listening on " << config.bind_address << ":"
             << config.port;
-  firefly::Server server(config, db->get());
+  firefly::Server server(
+      config, {.db = db->get(),
+               .market = {.instruments = &instruments,
+                          .candles = &candles,
+                          .provider = provider.get(),
+                          .clock = clock.get()}});
   server.Run();
   return 0;
 }

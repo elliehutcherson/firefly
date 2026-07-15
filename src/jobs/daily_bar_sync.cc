@@ -51,16 +51,6 @@ absl::StatusOr<int> SyncSymbol(const std::string& symbol, absl::CivilDay start,
 
 }  // namespace
 
-absl::TimeZone NewYorkTimeZone() {
-  absl::TimeZone tz;
-  if (!absl::LoadTimeZone("America/New_York", &tz)) {
-    // tzdata missing would be a broken image; EST keeps us roughly right.
-    LOG(ERROR) << "America/New_York tzdata unavailable; using fixed EST";
-    return absl::FixedTimeZone(-5 * 60 * 60);
-  }
-  return tz;
-}
-
 absl::StatusOr<DailyBarSyncStats> SyncDailyBars(
     InstrumentRepo& instruments, CandleRepo& candles,
     MarketDataProvider& provider, const Clock& clock,

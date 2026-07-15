@@ -14,11 +14,18 @@
 
 namespace firefly {
 
-// One bar-range request recorded by FakeMarketDataProvider.
+// One daily-bar request recorded by FakeMarketDataProvider.
 struct FakeBarsCall {
   std::string symbol;
   absl::CivilDay start;
   absl::CivilDay end;
+};
+
+// One minute-bar request recorded by FakeMarketDataProvider.
+struct FakeMinuteBarsCall {
+  std::string symbol;
+  absl::Time start;
+  absl::Time end;
 };
 
 // Replays canned results and records every call, like FakeDb.
@@ -50,7 +57,7 @@ class FakeMarketDataProvider : public MarketDataProvider {
   absl::StatusOr<std::vector<Bar>> GetMinuteBars(const std::string& symbol,
                                                  absl::Time start,
                                                  absl::Time end) override {
-    minute_bars_calls.push_back(symbol);
+    minute_bars_calls.push_back({symbol, start, end});
     if (minute_bars_results.empty()) {
       return absl::InternalError("FakeMarketDataProvider: no minute bars left");
     }
@@ -62,7 +69,7 @@ class FakeMarketDataProvider : public MarketDataProvider {
 
   std::vector<std::string> latest_trade_calls;
   std::vector<FakeBarsCall> daily_bars_calls;
-  std::vector<std::string> minute_bars_calls;
+  std::vector<FakeMinuteBarsCall> minute_bars_calls;
   std::deque<absl::StatusOr<Trade>> latest_trade_results;
   std::deque<absl::StatusOr<std::vector<Bar>>> daily_bars_results;
   std::deque<absl::StatusOr<std::vector<Bar>>> minute_bars_results;

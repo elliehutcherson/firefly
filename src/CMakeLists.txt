@@ -1,4 +1,5 @@
 add_library(firefly_lib
+    api/market_handlers.cc
     api/server.cc
     common/clock.cc
     common/config.cc

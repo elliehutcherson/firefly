@@ -14,9 +14,6 @@
 
 namespace firefly {
 
-// US market time. Daily bars are keyed by the New York trading date.
-absl::TimeZone NewYorkTimeZone();
-
 struct DailyBarSyncOptions {
   // The earliest day worth fetching for a symbol with no stored candles.
   // The backfill CLI passes years ago; the hourly job passes a short

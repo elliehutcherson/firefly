@@ -27,6 +27,10 @@ class Clock {
 // Backed by absl::Now / absl::SleepFor.
 std::unique_ptr<Clock> CreateSystemClock();
 
+// US market time. Trading dates, sessions, and daily bars are all keyed to
+// New York; every module that reasons about market time uses this.
+absl::TimeZone NewYorkTimeZone();
+
 }  // namespace firefly
 
 #endif  // FIREFLY_COMMON_CLOCK_H_

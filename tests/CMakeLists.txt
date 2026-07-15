@@ -53,6 +53,10 @@ add_executable(daily_bar_sync_test daily_bar_sync_test.cc)
 target_link_libraries(daily_bar_sync_test PRIVATE firefly_test_support)
 gtest_discover_tests(daily_bar_sync_test)
 
+add_executable(market_handlers_test market_handlers_test.cc)
+target_link_libraries(market_handlers_test PRIVATE firefly_test_support)
+gtest_discover_tests(market_handlers_test)
+
 add_executable(job_runner_test job_runner_test.cc)
 target_link_libraries(job_runner_test PRIVATE firefly_test_support)
 gtest_discover_tests(job_runner_test)
