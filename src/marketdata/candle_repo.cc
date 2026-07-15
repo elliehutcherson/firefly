@@ -1,8 +1,10 @@
 #include "src/marketdata/candle_repo.h"
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -36,9 +38,15 @@ absl::StatusOr<absl::CivilDay> ParseDay(absl::string_view text) {
   return day;
 }
 
+template <typename T>
+concept CandleFieldFormatter =
+    std::invocable<T, const DailyCandle&> &&
+    std::convertible_to<std::invoke_result_t<T, const DailyCandle&>,
+                        std::string>;
+
 // Postgres array literal from already-safe elements (dates and numbers we
 // format ourselves — no quoting hazard).
-template <typename T>
+template <CandleFieldFormatter T>
 std::string ArrayLiteral(const std::vector<DailyCandle>& candles,
                          T&& element) {
   return absl::StrCat(

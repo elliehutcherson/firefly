@@ -40,6 +40,16 @@ curl localhost:8080/healthz
 Configuration is via environment variables: `FIREFLY_BIND`, `FIREFLY_PORT`,
 `DATABASE_URL` (see `src/common/config.h` for defaults).
 
+### Run fully in Docker
+
+No local toolchain needed — builds the app image, starts Postgres, applies
+migrations, and runs the service in a container:
+
+```sh
+./scripts/run_container.sh
+curl localhost:8080/healthz
+```
+
 ## Dependencies
 
 C++ dependencies are git submodules under `include/`, pinned to release tags
