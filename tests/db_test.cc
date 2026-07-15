@@ -72,6 +72,15 @@ TEST_F(DbTest, MigrationsApplied) {
   EXPECT_NE((*rows)[0].columns[0], "0");
 }
 
+TEST_F(DbTest, InstrumentUniverseSeeded) {
+  // 0002_seed_instruments.sql: ~S&P 500 + Nasdaq-100 + popular ETFs.
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT count(*) FROM instruments WHERE is_active");
+  ASSERT_OK(rows);
+  ASSERT_TRUE((*rows)[0].columns[0].has_value());
+  EXPECT_GE(std::stoi(*(*rows)[0].columns[0]), 500);
+}
+
 TEST(DbOpenTest, BadUrlIsUnavailable) {
   EXPECT_THAT(
       OpenDb("postgres://nobody:wrong@localhost:1/none", /*pool_size=*/1),

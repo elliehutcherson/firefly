@@ -12,4 +12,6 @@ CTEST_ARGS=(-LE e2e)
 if [[ "${RUN_E2E:-0}" == "1" ]]; then
   CTEST_ARGS=()
 fi
-ctest --test-dir build --output-on-failure "${CTEST_ARGS[@]}"
+# The ${arr[@]+...} form keeps macOS bash 3.2's `set -u` happy when the
+# array is empty.
+ctest --test-dir build --output-on-failure ${CTEST_ARGS[@]+"${CTEST_ARGS[@]}"}
