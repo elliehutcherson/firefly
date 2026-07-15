@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/log/globals.h"
 #include "absl/log/initialize.h"
 #include "absl/log/log.h"
 #include "absl/status/statusor.h"
@@ -28,6 +29,8 @@ constexpr int kBackfillDays = 8;
 
 int main(int argc, char** argv) {
   absl::InitializeLog();
+  // The fetched data is the whole point of the tool; it logs at INFO.
+  absl::SetStderrThreshold(absl::LogSeverityAtLeast::kInfo);
   const firefly::Config config = firefly::Config::FromEnv();
   if (config.alpaca_key_id.empty() || config.alpaca_secret_key.empty()) {
     LOG(ERROR) << "set APCA_API_KEY_ID and APCA_API_SECRET_KEY "
