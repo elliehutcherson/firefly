@@ -7,6 +7,13 @@
 # docker-compose (brew install docker-compose) rather than podman-compose,
 # which mishandles the healthcheck conditions and profiles this repo uses.
 
+# The macOS pkg installs to /opt/podman/bin and only login shells pick up
+# its /etc/paths.d entry; non-login contexts (cron, editor tasks) need it
+# added at source time — callers use the engine name outside this file.
+if [[ -d /opt/podman/bin ]] && ! command -v podman >/dev/null 2>&1; then
+  PATH="/opt/podman/bin:$PATH"
+fi
+
 container_engine() {
   if [[ -n "${CONTAINER_ENGINE:-}" ]]; then
     echo "${CONTAINER_ENGINE}"
