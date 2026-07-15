@@ -26,6 +26,9 @@ services:
       FIREFLY_BIND: 0.0.0.0
       FIREFLY_PORT: "8080"
       DATABASE_URL: postgres://firefly:firefly@db:5432/firefly
+      # From .env (compose reads it automatically); empty disables market data.
+      APCA_API_KEY_ID: ${APCA_API_KEY_ID:-}
+      APCA_API_SECRET_KEY: ${APCA_API_SECRET_KEY:-}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
