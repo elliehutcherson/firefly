@@ -41,6 +41,10 @@ add_executable(instrument_repo_test instrument_repo_test.cc)
 target_link_libraries(instrument_repo_test PRIVATE firefly_test_support)
 gtest_discover_tests(instrument_repo_test)
 
+add_executable(cached_provider_test cached_provider_test.cc)
+target_link_libraries(cached_provider_test PRIVATE firefly_test_support)
+gtest_discover_tests(cached_provider_test)
+
 add_executable(candle_repo_test candle_repo_test.cc)
 target_link_libraries(candle_repo_test PRIVATE firefly_test_support)
 gtest_discover_tests(candle_repo_test)

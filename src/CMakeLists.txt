@@ -9,6 +9,7 @@ add_library(firefly_lib
     jobs/daily_bar_sync.cc
     jobs/job_runner.cc
     marketdata/alpaca.cc
+    marketdata/cached_provider.cc
     marketdata/candle_repo.cc
     marketdata/instrument_repo.cc)
 target_include_directories(firefly_lib PUBLIC ${CMAKE_SOURCE_DIR})
