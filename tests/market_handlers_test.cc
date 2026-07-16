@@ -197,7 +197,11 @@ TEST_F(MarketHandlersTest, IntradayAfterHoursClampsToTheClose) {
 
 TEST(HttpStatusFromCodeTest, MapsCodes) {
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kInvalidArgument), 400);
+  EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kUnauthenticated), 401);
+  EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kPermissionDenied), 403);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kNotFound), 404);
+  EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kAlreadyExists), 409);
+  EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kResourceExhausted), 429);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kUnavailable), 503);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kDeadlineExceeded), 504);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kInternal), 500);

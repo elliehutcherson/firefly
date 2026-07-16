@@ -133,6 +133,28 @@ TEST_F(DbTest, CandleRepoRoundTripsThroughRealPostgres) {
       "DELETE FROM candles_daily WHERE symbol = 'AAPL' AND day < '1971-01-01'"));
 }
 
+TEST_F(DbTest, ByteaRoundTripsHexText) {
+  // Pins the session token-hash binding contract: a text-mode param in
+  // Postgres' \x hex input form survives a ::bytea cast and comes back in
+  // the same form. SHA-256 of "abc".
+  const std::string hex =
+      "\\xba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT $1::bytea, octet_length($1::bytea)", {hex});
+  ASSERT_OK(rows);
+  EXPECT_EQ((*rows)[0].columns[0], hex);
+  EXPECT_EQ((*rows)[0].columns[1], "32");
+}
+
+TEST_F(DbTest, UniqueViolationIsAlreadyExists) {
+  ASSERT_OK(db_->Execute("DROP TABLE IF EXISTS dup_probe"));
+  ASSERT_OK(db_->Execute("CREATE TABLE dup_probe (k TEXT PRIMARY KEY)"));
+  ASSERT_OK(db_->Execute("INSERT INTO dup_probe VALUES ('a')"));
+  EXPECT_THAT(db_->Execute("INSERT INTO dup_probe VALUES ('a')"),
+              StatusIs(absl::StatusCode::kAlreadyExists));
+  ASSERT_OK(db_->Execute("DROP TABLE dup_probe"));
+}
+
 TEST(DbOpenTest, BadUrlIsUnavailable) {
   EXPECT_THAT(
       OpenDb("postgres://nobody:wrong@localhost:1/none", /*pool_size=*/1),

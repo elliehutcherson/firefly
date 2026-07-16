@@ -1,6 +1,7 @@
 add_library(firefly_lib
     api/market_handlers.cc
     api/server.cc
+    auth/crypto.cc
     common/clock.cc
     common/config.cc
     common/db.cc
@@ -27,7 +28,7 @@ target_link_libraries(firefly_lib PUBLIC
     crow
     nlohmann_json::nlohmann_json
     pqxx)
-target_link_libraries(firefly_lib PRIVATE cpr::cpr)
+target_link_libraries(firefly_lib PRIVATE cpr::cpr PkgConfig::SODIUM)
 
 add_executable(firefly main.cc)
 target_link_libraries(firefly PRIVATE firefly_lib)

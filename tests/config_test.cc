@@ -15,6 +15,12 @@ class ConfigTest : public ::testing::Test {
     unsetenv("DATABASE_URL");
     unsetenv("APCA_API_KEY_ID");
     unsetenv("APCA_API_SECRET_KEY");
+    unsetenv("TURNSTILE_SECRET_KEY");
+    unsetenv("FIREFLY_CLIENT_IP_HEADER");
+    unsetenv("FIREFLY_SESSION_TTL_DAYS");
+    unsetenv("FIREFLY_SIGNUP_IP_DAILY_CAP");
+    unsetenv("FIREFLY_AUTH_RATE_PER_MIN");
+    unsetenv("FIREFLY_AUTH_BURST");
   }
 };
 
@@ -26,6 +32,36 @@ TEST_F(ConfigTest, Defaults) {
             "postgres://firefly:firefly@localhost:5432/firefly");
   EXPECT_TRUE(config.alpaca_key_id.empty());
   EXPECT_TRUE(config.alpaca_secret_key.empty());
+  EXPECT_TRUE(config.turnstile_secret_key.empty());
+  EXPECT_TRUE(config.client_ip_header.empty());
+  EXPECT_EQ(config.session_ttl_days, 30);
+  EXPECT_EQ(config.signup_ip_daily_cap, 3);
+  EXPECT_EQ(config.auth_rate_per_min, 10);
+  EXPECT_EQ(config.auth_burst, 10);
+}
+
+TEST_F(ConfigTest, ReadsAuthSettings) {
+  setenv("TURNSTILE_SECRET_KEY", "ts-secret", 1);
+  setenv("FIREFLY_CLIENT_IP_HEADER", "CF-Connecting-IP", 1);
+  setenv("FIREFLY_SESSION_TTL_DAYS", "7", 1);
+  setenv("FIREFLY_SIGNUP_IP_DAILY_CAP", "5", 1);
+  setenv("FIREFLY_AUTH_RATE_PER_MIN", "20", 1);
+  setenv("FIREFLY_AUTH_BURST", "40", 1);
+  Config config = Config::FromEnv();
+  EXPECT_EQ(config.turnstile_secret_key, "ts-secret");
+  EXPECT_EQ(config.client_ip_header, "CF-Connecting-IP");
+  EXPECT_EQ(config.session_ttl_days, 7);
+  EXPECT_EQ(config.signup_ip_daily_cap, 5);
+  EXPECT_EQ(config.auth_rate_per_min, 20);
+  EXPECT_EQ(config.auth_burst, 40);
+}
+
+TEST_F(ConfigTest, IgnoresInvalidAuthNumbers) {
+  setenv("FIREFLY_SESSION_TTL_DAYS", "banana", 1);
+  setenv("FIREFLY_AUTH_BURST", "-3", 1);
+  Config config = Config::FromEnv();
+  EXPECT_EQ(config.session_ttl_days, 30);
+  EXPECT_EQ(config.auth_burst, 10);
 }
 
 TEST_F(ConfigTest, ReadsAlpacaCredentials) {

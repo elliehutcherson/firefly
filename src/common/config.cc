@@ -9,6 +9,19 @@ namespace {
 
 constexpr int kMaxPort = 65535;
 
+// Overwrites `field` when the variable holds a positive integer; invalid
+// values are ignored, like FIREFLY_PORT.
+void ReadPositiveInt(const char* name, int* field) {
+  const char* raw = std::getenv(name);
+  if (raw == nullptr) {
+    return;
+  }
+  int value = 0;
+  if (absl::SimpleAtoi(raw, &value) && value > 0) {
+    *field = value;
+  }
+}
+
 }  // namespace
 
 Config Config::FromEnv() {
@@ -31,6 +44,16 @@ Config Config::FromEnv() {
   if (const char* secret_key = std::getenv("APCA_API_SECRET_KEY")) {
     config.alpaca_secret_key = secret_key;
   }
+  if (const char* secret = std::getenv("TURNSTILE_SECRET_KEY")) {
+    config.turnstile_secret_key = secret;
+  }
+  if (const char* header = std::getenv("FIREFLY_CLIENT_IP_HEADER")) {
+    config.client_ip_header = header;
+  }
+  ReadPositiveInt("FIREFLY_SESSION_TTL_DAYS", &config.session_ttl_days);
+  ReadPositiveInt("FIREFLY_SIGNUP_IP_DAILY_CAP", &config.signup_ip_daily_cap);
+  ReadPositiveInt("FIREFLY_AUTH_RATE_PER_MIN", &config.auth_rate_per_min);
+  ReadPositiveInt("FIREFLY_AUTH_BURST", &config.auth_burst);
   return config;
 }
 

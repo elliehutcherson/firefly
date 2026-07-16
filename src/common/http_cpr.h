@@ -29,15 +29,19 @@ class CprHttpClient : public HttpClient {
  public:
   struct Options {
     // Defaults to the real cpr-backed transport when left unset.
-    std::function<TransportResult(const HttpRequest&)> transport;
+    std::function<TransportResult(const HttpRequest&, HttpMethod)> transport;
   };
 
   explicit CprHttpClient(Options options = {});
 
   absl::StatusOr<HttpResponse> Get(const HttpRequest& request) override;
+  absl::StatusOr<HttpResponse> Post(const HttpRequest& request) override;
 
  private:
-  std::function<TransportResult(const HttpRequest&)> transport_cb_;
+  absl::StatusOr<HttpResponse> Perform(const HttpRequest& request,
+                                       HttpMethod method);
+
+  std::function<TransportResult(const HttpRequest&, HttpMethod)> transport_cb_;
 };
 
 }  // namespace firefly

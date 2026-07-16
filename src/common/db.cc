@@ -48,6 +48,12 @@ absl::StatusOr<pqxx::result> Exec(DbPool& pool, const std::string& sql,
     lease.MarkBroken();
     return absl::UnavailableError(e.what());
   } catch (const pqxx::sql_error& e) {
+    // 23505 unique_violation: the row already exists (e.g. duplicate
+    // username); callers map AlreadyExists to HTTP 409.
+    if (e.sqlstate() == "23505") {
+      return absl::AlreadyExistsError(
+          absl::StrCat(e.what(), " [sqlstate 23505]"));
+    }
     return absl::InvalidArgumentError(
         absl::StrCat(e.what(), " [sqlstate ", e.sqlstate(), "]"));
   } catch (const std::exception& e) {

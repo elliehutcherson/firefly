@@ -23,6 +23,20 @@ struct Config {
   // market data is unavailable.
   std::string alpaca_key_id;
   std::string alpaca_secret_key;
+
+  // TURNSTILE_SECRET_KEY — Cloudflare Turnstile server secret. Empty means
+  // signup/login skip human verification (dev/test).
+  std::string turnstile_secret_key;
+  // FIREFLY_CLIENT_IP_HEADER — trusted header carrying the real client IP
+  // ("CF-Connecting-IP" behind Cloudflare). Empty means use the socket peer
+  // address (dev). Only safe because Crow binds localhost behind Caddy.
+  std::string client_ip_header;
+  // Auth knobs; env vars of the same (uppercased) names, invalid values
+  // ignored like FIREFLY_PORT.
+  int session_ttl_days = 30;       // FIREFLY_SESSION_TTL_DAYS
+  int signup_ip_daily_cap = 3;     // FIREFLY_SIGNUP_IP_DAILY_CAP
+  int auth_rate_per_min = 10;      // FIREFLY_AUTH_RATE_PER_MIN
+  int auth_burst = 10;             // FIREFLY_AUTH_BURST
 };
 
 }  // namespace firefly

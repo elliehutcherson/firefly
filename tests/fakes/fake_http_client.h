@@ -11,11 +11,27 @@
 
 namespace firefly {
 
-// Replays canned responses and records every request it receives.
+// Replays canned responses and records every request it receives; `methods`
+// runs parallel to `requests`.
 class FakeHttpClient : public HttpClient {
  public:
   absl::StatusOr<HttpResponse> Get(const HttpRequest& request) override {
+    return Record(request, HttpMethod::kGet);
+  }
+
+  absl::StatusOr<HttpResponse> Post(const HttpRequest& request) override {
+    return Record(request, HttpMethod::kPost);
+  }
+
+  std::vector<HttpRequest> requests;
+  std::vector<HttpMethod> methods;
+  std::deque<absl::StatusOr<HttpResponse>> responses;
+
+ private:
+  absl::StatusOr<HttpResponse> Record(const HttpRequest& request,
+                                      HttpMethod method) {
     requests.push_back(request);
+    methods.push_back(method);
     if (responses.empty()) {
       return absl::InternalError("FakeHttpClient: no canned response left");
     }
@@ -23,9 +39,6 @@ class FakeHttpClient : public HttpClient {
     responses.pop_front();
     return response;
   }
-
-  std::vector<HttpRequest> requests;
-  std::deque<absl::StatusOr<HttpResponse>> responses;
 };
 
 }  // namespace firefly

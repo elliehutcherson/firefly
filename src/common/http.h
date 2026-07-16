@@ -1,6 +1,7 @@
 #ifndef FIREFLY_COMMON_HTTP_H_
 #define FIREFLY_COMMON_HTTP_H_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -18,12 +19,16 @@ struct HttpRequest {
   std::string url;
   std::vector<std::pair<std::string, std::string>> headers;
   std::vector<std::pair<std::string, std::string>> query_params;
+  // POST only: sent URL-encoded as application/x-www-form-urlencoded.
+  std::vector<std::pair<std::string, std::string>> form;
 };
 
 struct HttpResponse {
   int status_code = 0;
   std::string body;
 };
+
+enum class HttpMethod : std::uint8_t { kGet, kPost };
 
 class HttpClient {
  public:
@@ -33,6 +38,9 @@ class HttpClient {
   // error Status; an HTTP error is a success whose status_code says so —
   // what a 429 means is the caller's business, not the transport's.
   virtual absl::StatusOr<HttpResponse> Get(const HttpRequest& request) = 0;
+
+  // Form-encoded POST (request.form); same error contract as Get.
+  virtual absl::StatusOr<HttpResponse> Post(const HttpRequest& request) = 0;
 };
 
 // The production client, backed by cpr/libcurl.
