@@ -1,6 +1,7 @@
 #ifndef FIREFLY_API_SERVER_H_
 #define FIREFLY_API_SERVER_H_
 
+#include "src/api/auth_handlers.h"
 #include "src/api/market_handlers.h"
 #include "src/common/config.h"
 #include "src/common/db.h"
@@ -21,6 +22,7 @@ HealthReport CheckHealth(Db& db);
 struct ServerDeps {
   Db* db = nullptr;
   MarketDeps market;
+  AuthDeps auth;
 };
 
 class Server {
