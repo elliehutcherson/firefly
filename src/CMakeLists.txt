@@ -2,6 +2,9 @@ add_library(firefly_lib
     api/market_handlers.cc
     api/server.cc
     auth/crypto.cc
+    auth/session_repo.cc
+    auth/turnstile.cc
+    auth/user_repo.cc
     common/clock.cc
     common/config.cc
     common/db.cc

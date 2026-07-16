@@ -25,6 +25,18 @@ add_executable(crypto_test crypto_test.cc)
 target_link_libraries(crypto_test PRIVATE firefly_test_support)
 gtest_discover_tests(crypto_test)
 
+add_executable(user_repo_test user_repo_test.cc)
+target_link_libraries(user_repo_test PRIVATE firefly_test_support)
+gtest_discover_tests(user_repo_test)
+
+add_executable(session_repo_test session_repo_test.cc)
+target_link_libraries(session_repo_test PRIVATE firefly_test_support)
+gtest_discover_tests(session_repo_test)
+
+add_executable(turnstile_test turnstile_test.cc)
+target_link_libraries(turnstile_test PRIVATE firefly_test_support)
+gtest_discover_tests(turnstile_test)
+
 add_executable(money_test money_test.cc)
 target_link_libraries(money_test PRIVATE firefly_test_support)
 gtest_discover_tests(money_test)
