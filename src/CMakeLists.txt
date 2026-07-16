@@ -3,6 +3,7 @@ add_library(firefly_lib
     api/market_handlers.cc
     api/rate_limiter.cc
     api/server.cc
+    api/status_mapping.cc
     auth/crypto.cc
     auth/session_repo.cc
     auth/turnstile.cc

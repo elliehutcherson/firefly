@@ -8,8 +8,8 @@
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
 #include "src/common/clock.h"
-#include "src/marketdata/candle_repo.h"
-#include "src/marketdata/instrument_repo.h"
+#include "src/marketdata/candle_store.h"
+#include "src/marketdata/instrument_store.h"
 #include "src/marketdata/provider.h"
 
 namespace firefly {
@@ -46,7 +46,7 @@ struct DailyBarSyncStats {
 // A failing symbol is logged, counted, and skipped — one bad symbol must not
 // starve the rest. Returns non-OK only when nothing succeeded.
 absl::StatusOr<DailyBarSyncStats> SyncDailyBars(
-    InstrumentRepo& instruments, CandleRepo& candles,
+    InstrumentStore& instruments, CandleStore& candles,
     MarketDataProvider& provider, const Clock& clock,
     const DailyBarSyncOptions& options);
 

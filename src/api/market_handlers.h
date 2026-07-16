@@ -7,8 +7,8 @@
 #include "absl/status/statusor.h"
 #include "nlohmann/json.hpp"
 #include "src/common/clock.h"
-#include "src/marketdata/candle_repo.h"
-#include "src/marketdata/instrument_repo.h"
+#include "src/marketdata/candle_store.h"
+#include "src/marketdata/instrument_store.h"
 #include "src/marketdata/provider.h"
 
 namespace firefly {
@@ -25,8 +25,8 @@ namespace firefly {
 // credentials): quote/intraday return Unavailable, daily still serves from
 // Postgres.
 struct MarketDeps {
-  InstrumentRepo* instruments = nullptr;
-  CandleRepo* candles = nullptr;
+  InstrumentStore* instruments = nullptr;
+  CandleStore* candles = nullptr;
   MarketDataProvider* provider = nullptr;
   const Clock* clock = nullptr;
 };
@@ -52,10 +52,6 @@ absl::StatusOr<nlohmann::json> GetDailyCandlesJson(
 // share one CachedProvider key.
 absl::StatusOr<nlohmann::json> GetIntradayCandlesJson(
     const MarketDeps& deps, const std::string& raw_symbol);
-
-// InvalidArgument→400, NotFound→404, Unavailable→503, DeadlineExceeded→504,
-// anything else→500.
-int HttpStatusFromCode(absl::StatusCode code);
 
 }  // namespace firefly
 

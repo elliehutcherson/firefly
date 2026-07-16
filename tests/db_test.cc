@@ -55,9 +55,9 @@ TEST_F(DbTest, BindsParametersAndNull) {
   EXPECT_EQ((*rows)[0].columns[1], std::nullopt);
 }
 
-TEST_F(DbTest, InvalidSqlIsInvalidArgument) {
+TEST_F(DbTest, InvalidSqlIsInternal) {
   EXPECT_THAT(db_->Query("SELECT FROM WHERE"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(absl::StatusCode::kInternal));
 }
 
 TEST_F(DbTest, NumericRoundTripsPriceE4) {

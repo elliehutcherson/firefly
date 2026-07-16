@@ -178,27 +178,4 @@ absl::StatusOr<nlohmann::json> GetIntradayCandlesJson(
   return nlohmann::json{{"symbol", symbol}, {"bars", std::move(bars)}};
 }
 
-int HttpStatusFromCode(absl::StatusCode code) {
-  switch (code) {
-    case absl::StatusCode::kInvalidArgument:
-      return 400;
-    case absl::StatusCode::kUnauthenticated:
-      return 401;
-    case absl::StatusCode::kPermissionDenied:
-      return 403;
-    case absl::StatusCode::kNotFound:
-      return 404;
-    case absl::StatusCode::kAlreadyExists:
-      return 409;
-    case absl::StatusCode::kResourceExhausted:
-      return 429;
-    case absl::StatusCode::kUnavailable:
-      return 503;
-    case absl::StatusCode::kDeadlineExceeded:
-      return 504;
-    default:
-      return 500;
-  }
-}
-
 }  // namespace firefly

@@ -12,8 +12,8 @@
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
 #include "src/auth/crypto.h"
-#include "src/auth/session_repo.h"
-#include "src/auth/user_repo.h"
+#include "src/auth/session_store.h"
+#include "src/auth/user_store.h"
 #include "src/common/status_macros.h"
 #include "src/db/transaction.h"
 

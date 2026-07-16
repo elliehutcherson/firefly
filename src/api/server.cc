@@ -16,6 +16,7 @@
 #include "src/api/auth_handlers.h"
 #include "src/api/market_handlers.h"
 #include "src/api/rate_limiter.h"
+#include "src/api/status_mapping.h"
 
 namespace firefly {
 namespace {
@@ -112,7 +113,7 @@ crow::response AuthResponse(const absl::StatusOr<AuthResult>& result,
   if (!result.ok()) {
     crow::response response =
         JsonResponse(HttpStatusFromCode(result.status().code()),
-                     {{"error", std::string(result.status().message())}});
+                     {{"error", PublicErrorMessage(result.status())}});
     response.set_header("Cache-Control", "no-store");
     return response;
   }
@@ -142,7 +143,7 @@ crow::response NoStoreResponse(const absl::StatusOr<nlohmann::json>& result) {
       result.ok()
           ? JsonResponse(kStatusOk, *result)
           : JsonResponse(HttpStatusFromCode(result.status().code()),
-                         {{"error", std::string(result.status().message())}});
+                         {{"error", PublicErrorMessage(result.status())}});
   response.set_header("Cache-Control", "no-store");
   return response;
 }
@@ -152,7 +153,7 @@ crow::response MarketResponse(const absl::StatusOr<nlohmann::json>& result) {
   if (!result.ok()) {
     crow::response response =
         JsonResponse(HttpStatusFromCode(result.status().code()),
-                     {{"error", std::string(result.status().message())}});
+                     {{"error", PublicErrorMessage(result.status())}});
     response.set_header("Cache-Control", kUncacheable);
     return response;
   }

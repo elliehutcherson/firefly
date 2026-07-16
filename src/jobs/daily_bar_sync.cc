@@ -13,8 +13,8 @@
 #include "absl/time/time.h"
 #include "src/common/clock.h"
 #include "src/common/status_macros.h"
-#include "src/marketdata/candle_repo.h"
-#include "src/marketdata/instrument_repo.h"
+#include "src/marketdata/candle_store.h"
+#include "src/marketdata/instrument_store.h"
 #include "src/marketdata/provider.h"
 
 namespace firefly {
@@ -38,7 +38,7 @@ std::vector<DailyCandle> ToDailyCandles(const std::vector<Bar>& bars,
 // Fetches [start, through] for one symbol and stores it. One provider call
 // (paginated internally) and at most one insert.
 absl::StatusOr<int> SyncSymbol(const std::string& symbol, absl::CivilDay start,
-                               absl::CivilDay through, CandleRepo& candles,
+                               absl::CivilDay through, CandleStore& candles,
                                MarketDataProvider& provider,
                                absl::TimeZone new_york) {
   ASSIGN_OR_RETURN(const std::vector<Bar> bars,
@@ -52,7 +52,7 @@ absl::StatusOr<int> SyncSymbol(const std::string& symbol, absl::CivilDay start,
 }  // namespace
 
 absl::StatusOr<DailyBarSyncStats> SyncDailyBars(
-    InstrumentRepo& instruments, CandleRepo& candles,
+    InstrumentStore& instruments, CandleStore& candles,
     MarketDataProvider& provider, const Clock& clock,
     const DailyBarSyncOptions& options) {
   const absl::TimeZone new_york = NewYorkTimeZone();

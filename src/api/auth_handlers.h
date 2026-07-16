@@ -7,9 +7,9 @@
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
-#include "src/auth/session_repo.h"
+#include "src/auth/session_store.h"
 #include "src/auth/turnstile.h"
-#include "src/auth/user_repo.h"
+#include "src/auth/user_store.h"
 #include "src/common/clock.h"
 #include "src/db/db.h"
 
@@ -22,8 +22,8 @@ namespace firefly {
 // All borrowed, all non-owning.
 struct AuthDeps {
   Db* db = nullptr;
-  UserRepo* users = nullptr;
-  SessionRepo* sessions = nullptr;
+  UserStore* users = nullptr;
+  SessionStore* sessions = nullptr;
   TurnstileVerifier* turnstile = nullptr;
   const Clock* clock = nullptr;
   absl::Duration session_ttl = absl::Hours(24 * 30);

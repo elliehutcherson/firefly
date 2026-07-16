@@ -10,7 +10,6 @@
 #include <pqxx/pqxx>
 
 #include "absl/log/log.h"
-#include "absl/strings/str_cat.h"
 #include "src/common/status_macros.h"
 #include "src/db/connection_pool.h"
 
@@ -36,14 +35,23 @@ class Lease {
 };
 
 absl::Status ExceptionStatus(const pqxx::sql_error& e) {
-  // 23505 unique_violation: the row already exists (e.g. duplicate
-  // username); callers map AlreadyExists to HTTP 409.
+  // Map only states callers can handle meaningfully. Everything else is an
+  // application/schema failure, not invalid client input.
   if (e.sqlstate() == "23505") {
-    return absl::AlreadyExistsError(
-        absl::StrCat(e.what(), " [sqlstate 23505]"));
+    return absl::AlreadyExistsError("database value already exists");
   }
-  return absl::InvalidArgumentError(
-      absl::StrCat(e.what(), " [sqlstate ", e.sqlstate(), "]"));
+  if (e.sqlstate() == "40001" || e.sqlstate() == "40P01") {
+    LOG(WARNING) << "retryable database transaction error (sqlstate "
+                 << e.sqlstate() << "): " << e.what();
+    return absl::AbortedError("database transaction must be retried");
+  }
+  if (e.sqlstate() == "57014") {
+    LOG(WARNING) << "database operation canceled: " << e.what();
+    return absl::DeadlineExceededError("database operation was canceled");
+  }
+  LOG(ERROR) << "database SQL error (sqlstate " << e.sqlstate()
+             << "): " << e.what();
+  return absl::InternalError("database operation failed");
 }
 
 Rows ToRows(const pqxx::result& result) {

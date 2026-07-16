@@ -61,7 +61,7 @@ firefly::DailyBarSyncOptions OptionsFromFlags(const firefly::Clock& clock) {
   return options;
 }
 
-int RunSync(firefly::InstrumentRepo& instruments, firefly::CandleRepo& candles,
+int RunSync(firefly::InstrumentStore& instruments, firefly::CandleStore& candles,
             firefly::MarketDataProvider& provider,
             const firefly::Clock& clock) {
   const firefly::DailyBarSyncOptions options = OptionsFromFlags(clock);
