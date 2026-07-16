@@ -2,6 +2,36 @@
 
 Date: 2026-07-15
 
+## Implementation status (2026-07-16)
+
+The review work is complete enough to begin Milestone 4 (trading). The findings
+below are retained as the rationale and historical record. Implemented items:
+
+- transaction API and rollback-on-destruction semantics;
+- atomic signup using one transaction;
+- generic database infrastructure under `src/db/`;
+- checked `RowReader` and selective domain storage interfaces;
+- safe SQL error classification and public API status mapping;
+- bounded market-data caches and bounded connection-pool acquisition;
+- immutable active-instrument snapshots with periodic refresh;
+- schema invariants in `0003_schema_invariants.sql`;
+- unit/integration test organization mirroring production domains; and
+- references for required borrowed dependencies, retaining pointers only when
+  null has documented meaning.
+
+Deliberate deferrals:
+
+- Metrics counters have no consumer until deployment monitoring exists. Pool
+  exhaustion and refresh failures are logged now; add exported metrics with
+  Milestone 7 rather than introducing an unused metrics dependency.
+- Generate future instrument rebalance migrations from a checked-in source
+  snapshot when the first rebalance is needed. The current seed is valid and
+  remains the deployment source of truth.
+- Cash bounds depend on the trading and margin arithmetic. Define them during
+  Milestone 4 rather than encoding a speculative database policy.
+
+See `docs/HANDOFF.md` for the current repository state and next work.
+
 ## Executive summary
 
 The codebase is in good shape for its current milestone. It is small, readable,
@@ -24,8 +54,8 @@ The database layer should be reorganized, but not into an ORM or a single large
 This preserves direct SQL and its performance characteristics while making
 dependency direction and transaction ownership much clearer.
 
-No production changes were made as part of this review. The existing build and
-all 143 tests pass.
+At the original review checkpoint all 143 tests passed. After implementing the
+findings, 158 hermetic unit tests and 19 PostgreSQL integration tests pass.
 
 ## What is working well
 
@@ -302,4 +332,6 @@ Each step can be landed independently. Avoid a flag-day repository rewrite.
 - Searched production and test code for pqxx exposure and database access.
   pqxx is confined to `src/db/db.cc`, `src/db/connection_pool.cc`, and the
   internal pool header, as intended.
-- Ran `./scripts/build_and_test.sh`: build succeeded; 143/143 tests passed.
+- Original review run: `./scripts/build_and_test.sh` passed 143/143 tests.
+- Final implementation run: 158/158 hermetic unit tests passed.
+- Final PostgreSQL integration run: 19/19 tests passed.
