@@ -1,6 +1,7 @@
 #ifndef FIREFLY_MARKETDATA_CACHED_PROVIDER_H_
 #define FIREFLY_MARKETDATA_CACHED_PROVIDER_H_
 
+#include <cstddef>
 #include <future>
 #include <string>
 #include <vector>
@@ -22,6 +23,11 @@ struct CacheOptions {
   // "Anti-cheat pricing rule"); the Cloudflare edge adds its own ~60s.
   absl::Duration quote_ttl = absl::Seconds(30);
   absl::Duration minute_bars_ttl = absl::Seconds(90);
+  // Hard bounds for completed entries. Concurrent in-flight fetches may
+  // temporarily exceed these limits; they are never evicted because waiters
+  // must retain request coalescing.
+  size_t max_quote_entries = 1024;
+  size_t max_minute_bar_entries = 4096;
 };
 
 // Caching + request-coalescing decorator over a MarketDataProvider
@@ -38,11 +44,9 @@ struct CacheOptions {
 //   * GetDailyBars passes through uncached: daily charts are served from
 //     Postgres and never reach a provider at request time.
 //
-// No eviction thread: callers validate symbols against the instruments
-// universe *before* calling, so the key space is bounded (~800 symbols) and
-// stale entries are simply replaced on their next lookup. Minute-bar keys
-// include the requested range; callers quantize ranges to whole minutes so
-// requests within the same minute share one key.
+// No eviction thread: insertion and fetch completion opportunistically remove
+// expired entries, then evict completed entries with the earliest expiration
+// until the configured bound is met. In-flight entries are never evicted.
 //
 // Thread-safe. The mutex only guards map lookups — never the upstream call.
 class CachedProvider : public MarketDataProvider {
@@ -77,8 +81,15 @@ class CachedProvider : public MarketDataProvider {
   // exists, or calls `fetch` (outside the lock) and caches the result.
   template <typename V>
   absl::StatusOr<V> GetOrFetch(Cache<V>& cache, const std::string& key,
-                               absl::Duration ttl,
+                               absl::Duration ttl, size_t max_entries,
                                absl::FunctionRef<absl::StatusOr<V>()> fetch);
+
+  // Removes expired completed entries, then the completed entries nearest
+  // expiration, until `cache` is at or below `target_size`. Must be called
+  // while holding cache.mu. In-flight entries may keep it temporarily larger.
+  template <typename V>
+  void Trim(Cache<V>& cache, absl::Time now, size_t target_size)
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(cache.mu);
 
   MarketDataProvider* const inner_;
   const Clock* const clock_;

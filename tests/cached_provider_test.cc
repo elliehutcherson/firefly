@@ -73,6 +73,31 @@ TEST(CachedProviderTest, SymbolsAreIndependentKeys) {
   EXPECT_EQ(inner.latest_trade_calls.size(), 2);
 }
 
+TEST(CachedProviderTest, QuoteCacheEvictsEntryNearestExpirationAtLimit) {
+  FakeMarketDataProvider inner;
+  inner.latest_trade_results.push_back(TradeAt(1));
+  inner.latest_trade_results.push_back(TradeAt(2));
+  inner.latest_trade_results.push_back(TradeAt(3));
+  inner.latest_trade_results.push_back(TradeAt(4));
+  FakeClock clock(TestNow());
+  CacheOptions options = kOptions;
+  options.max_quote_entries = 2;
+  CachedProvider provider(&inner, &clock, options);
+
+  ASSERT_OK(provider.GetLatestTrade("AAPL"));
+  clock.Advance(absl::Seconds(1));
+  ASSERT_OK(provider.GetLatestTrade("MSFT"));
+  clock.Advance(absl::Seconds(1));
+  ASSERT_OK(provider.GetLatestTrade("GOOG"));
+
+  // AAPL had the earliest expiration and was evicted despite still being
+  // fresh, so requesting it again reaches the provider.
+  absl::StatusOr<Trade> aapl = provider.GetLatestTrade("AAPL");
+  ASSERT_OK(aapl);
+  EXPECT_EQ(aapl->price_e4, 4);
+  EXPECT_EQ(inner.latest_trade_calls.size(), 4);
+}
+
 TEST(CachedProviderTest, ErrorsAreDeliveredButNeverCached) {
   FakeMarketDataProvider inner;
   inner.latest_trade_results.push_back(absl::UnavailableError("alpaca 500"));
@@ -183,6 +208,30 @@ TEST(CachedProviderTest, ConcurrentMissesShareOneUpstreamCall) {
     ASSERT_OK(result);
     EXPECT_EQ(result->price_e4, 1899550);
   }
+}
+
+TEST(CachedProviderTest, ZeroCapacityStillCoalescesInflightRequests) {
+  BlockingProvider inner;
+  FakeClock clock(TestNow());
+  CacheOptions options = kOptions;
+  options.max_quote_entries = 0;
+  CachedProvider provider(&inner, &clock, options);
+
+  absl::StatusOr<Trade> results[2];
+  std::thread first([&] { results[0] = provider.GetLatestTrade("AAPL"); });
+  inner.entered.WaitForNotification();
+  std::thread second([&] { results[1] = provider.GetLatestTrade("AAPL"); });
+  absl::SleepFor(absl::Milliseconds(50));
+  inner.release.Notify();
+  first.join();
+  second.join();
+
+  EXPECT_EQ(inner.calls.load(), 1);
+  ASSERT_OK(results[0]);
+  ASSERT_OK(results[1]);
+  // Completed values are not retained at zero capacity.
+  ASSERT_OK(provider.GetLatestTrade("AAPL"));
+  EXPECT_EQ(inner.calls.load(), 2);
 }
 
 }  // namespace
