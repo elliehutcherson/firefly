@@ -7,6 +7,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/time/time.h"
 #include "src/db/sql_executor.h"
 #include "src/db/transaction.h"
 
@@ -18,8 +19,6 @@ namespace firefly {
 // there and never escape (see docs/STYLE.md).
 class Db : public SqlExecutor {
  public:
-  static constexpr int kDefaultPoolSize = 4;
-
   using SqlExecutor::Execute;
   using SqlExecutor::Query;
 
@@ -42,11 +41,17 @@ class Db : public SqlExecutor {
   virtual absl::StatusOr<std::unique_ptr<Transaction>> Begin() = 0;
 };
 
+struct DbOptions {
+  int pool_size = 4;
+  absl::Duration acquire_timeout = absl::Seconds(2);
+};
+
 // Production Db backed by a fixed-size libpqxx connection pool. Connects
-// eagerly (fails fast on a bad URL or unreachable server). Thread-safe:
-// calls block until a pooled connection is free.
+// eagerly (fails fast on a bad URL or unreachable server). Thread-safe.
+// Calls return DeadlineExceeded if the pool remains exhausted for the
+// configured acquisition timeout.
 absl::StatusOr<std::unique_ptr<Db>> OpenDb(
-    const std::string& database_url, int pool_size = Db::kDefaultPoolSize);
+    const std::string& database_url, DbOptions options = {});
 
 }  // namespace firefly
 

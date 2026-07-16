@@ -25,7 +25,7 @@ class DbTest : public ::testing::Test {
  protected:
   void SetUp() override {
     absl::StatusOr<std::unique_ptr<Db>> db =
-        OpenDb(Config::FromEnv().database_url, /*pool_size=*/2);
+        OpenDb(Config::FromEnv().database_url, {.pool_size = 2});
     if (!db.ok()) {
       GTEST_SKIP() << "database unavailable: " << db.status();
     }
@@ -204,14 +204,35 @@ TEST_F(DbTest, FinishedTransactionRejectsFurtherUse) {
               StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
+TEST_F(DbTest, ExhaustedPoolReturnsDeadlineExceededAndRecovers) {
+  absl::StatusOr<std::unique_ptr<Db>> bounded = OpenDb(
+      Config::FromEnv().database_url,
+      {.pool_size = 1, .acquire_timeout = absl::Milliseconds(20)});
+  ASSERT_OK(bounded);
+  absl::StatusOr<std::unique_ptr<Transaction>> lease = (*bounded)->Begin();
+  ASSERT_OK(lease);
+
+  EXPECT_THAT((*bounded)->Begin(),
+              StatusIs(absl::StatusCode::kDeadlineExceeded));
+
+  lease = nullptr;
+  EXPECT_OK((*bounded)->Begin());
+}
+
 TEST(DbOpenTest, BadUrlIsUnavailable) {
   EXPECT_THAT(
-      OpenDb("postgres://nobody:wrong@localhost:1/none", /*pool_size=*/1),
+      OpenDb("postgres://nobody:wrong@localhost:1/none", {.pool_size = 1}),
       StatusIs(absl::StatusCode::kUnavailable));
 }
 
 TEST(DbOpenTest, RejectsNonPositivePoolSize) {
-  EXPECT_THAT(OpenDb("postgres://localhost/x", /*pool_size=*/0),
+  EXPECT_THAT(OpenDb("postgres://localhost/x", {.pool_size = 0}),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(DbOpenTest, RejectsNonPositiveAcquireTimeout) {
+  EXPECT_THAT(OpenDb("postgres://localhost/x",
+                     {.acquire_timeout = absl::ZeroDuration()}),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

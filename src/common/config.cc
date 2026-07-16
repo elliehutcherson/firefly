@@ -51,6 +51,9 @@ Config Config::FromEnv() {
     config.client_ip_header = header;
   }
   ReadPositiveInt("FIREFLY_SESSION_TTL_DAYS", &config.session_ttl_days);
+  ReadPositiveInt("FIREFLY_DB_POOL_SIZE", &config.db_pool_size);
+  ReadPositiveInt("FIREFLY_DB_ACQUIRE_TIMEOUT_MS",
+                  &config.db_acquire_timeout_ms);
   ReadPositiveInt("FIREFLY_SIGNUP_IP_DAILY_CAP", &config.signup_ip_daily_cap);
   ReadPositiveInt("FIREFLY_AUTH_RATE_PER_MIN", &config.auth_rate_per_min);
   ReadPositiveInt("FIREFLY_AUTH_BURST", &config.auth_burst);

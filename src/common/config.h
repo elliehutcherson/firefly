@@ -8,7 +8,8 @@ namespace firefly {
 struct Config {
   static constexpr int kDefaultPort = 8080;
 
-  // Reads FIREFLY_BIND, FIREFLY_PORT, DATABASE_URL, and the Alpaca
+  // Reads FIREFLY_BIND, FIREFLY_PORT, DATABASE_URL, database pool settings,
+  // and the Alpaca
   // credentials from the environment, falling back to the defaults below.
   // Invalid FIREFLY_PORT values are ignored.
   static Config FromEnv();
@@ -18,6 +19,11 @@ struct Config {
   int port = kDefaultPort;
   std::string database_url =
       "postgres://firefly:firefly@localhost:5432/firefly";
+  // Keep this intentionally aligned with the small synchronous HTTP worker
+  // deployment. Pool waits are bounded so saturation cannot consume every
+  // worker indefinitely.
+  int db_pool_size = 4;             // FIREFLY_DB_POOL_SIZE
+  int db_acquire_timeout_ms = 2000;  // FIREFLY_DB_ACQUIRE_TIMEOUT_MS
   // APCA_API_KEY_ID / APCA_API_SECRET_KEY — Alpaca's standard variable names,
   // so the same environment works with Alpaca's own tooling. Empty means
   // market data is unavailable.

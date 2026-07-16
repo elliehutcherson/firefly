@@ -45,7 +45,8 @@ curl localhost:8080/healthz
 ```
 
 Configuration is via environment variables: `FIREFLY_BIND`, `FIREFLY_PORT`,
-`DATABASE_URL` (see `src/common/config.h` for defaults).
+`DATABASE_URL`, `FIREFLY_DB_POOL_SIZE`, and
+`FIREFLY_DB_ACQUIRE_TIMEOUT_MS` (see `src/common/config.h` for defaults).
 
 ### Run fully in containers
 

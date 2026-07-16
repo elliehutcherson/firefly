@@ -191,14 +191,19 @@ class PqxxDb : public Db {
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<Db>> OpenDb(const std::string& database_url,
-                                           int pool_size) {
-  if (pool_size < 1) {
+                                           DbOptions options) {
+  if (options.pool_size < 1) {
     return absl::InvalidArgumentError("pool_size must be at least 1");
   }
-  auto db = std::make_unique<PqxxDb>(
-      std::make_unique<ConnectionPool>(database_url, pool_size));
+  if (options.acquire_timeout <= absl::ZeroDuration()) {
+    return absl::InvalidArgumentError("acquire_timeout must be positive");
+  }
+  auto db = std::make_unique<PqxxDb>(std::make_unique<ConnectionPool>(
+      database_url, options.pool_size, options.acquire_timeout));
   RETURN_IF_ERROR(db->Ping());
-  LOG(INFO) << "database pool ready (max " << pool_size << " connections)";
+  LOG(INFO) << "database pool ready (max " << options.pool_size
+            << " connections, acquisition timeout "
+            << absl::FormatDuration(options.acquire_timeout) << ")";
   return db;
 }
 

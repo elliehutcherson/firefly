@@ -13,6 +13,8 @@ class ConfigTest : public ::testing::Test {
     unsetenv("FIREFLY_BIND");
     unsetenv("FIREFLY_PORT");
     unsetenv("DATABASE_URL");
+    unsetenv("FIREFLY_DB_POOL_SIZE");
+    unsetenv("FIREFLY_DB_ACQUIRE_TIMEOUT_MS");
     unsetenv("APCA_API_KEY_ID");
     unsetenv("APCA_API_SECRET_KEY");
     unsetenv("TURNSTILE_SECRET_KEY");
@@ -30,6 +32,8 @@ TEST_F(ConfigTest, Defaults) {
   EXPECT_EQ(config.port, 8080);
   EXPECT_EQ(config.database_url,
             "postgres://firefly:firefly@localhost:5432/firefly");
+  EXPECT_EQ(config.db_pool_size, 4);
+  EXPECT_EQ(config.db_acquire_timeout_ms, 2000);
   EXPECT_TRUE(config.alpaca_key_id.empty());
   EXPECT_TRUE(config.alpaca_secret_key.empty());
   EXPECT_TRUE(config.turnstile_secret_key.empty());
@@ -38,6 +42,22 @@ TEST_F(ConfigTest, Defaults) {
   EXPECT_EQ(config.signup_ip_daily_cap, 3);
   EXPECT_EQ(config.auth_rate_per_min, 10);
   EXPECT_EQ(config.auth_burst, 10);
+}
+
+TEST_F(ConfigTest, ReadsDatabasePoolSettings) {
+  setenv("FIREFLY_DB_POOL_SIZE", "8", 1);
+  setenv("FIREFLY_DB_ACQUIRE_TIMEOUT_MS", "750", 1);
+  Config config = Config::FromEnv();
+  EXPECT_EQ(config.db_pool_size, 8);
+  EXPECT_EQ(config.db_acquire_timeout_ms, 750);
+}
+
+TEST_F(ConfigTest, IgnoresInvalidDatabasePoolSettings) {
+  setenv("FIREFLY_DB_POOL_SIZE", "0", 1);
+  setenv("FIREFLY_DB_ACQUIRE_TIMEOUT_MS", "eventually", 1);
+  Config config = Config::FromEnv();
+  EXPECT_EQ(config.db_pool_size, 4);
+  EXPECT_EQ(config.db_acquire_timeout_ms, 2000);
 }
 
 TEST_F(ConfigTest, ReadsAuthSettings) {

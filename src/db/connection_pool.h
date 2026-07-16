@@ -10,6 +10,7 @@
 
 #include "absl/base/thread_annotations.h"
 #include "absl/status/statusor.h"
+#include "absl/time/time.h"
 
 namespace firefly {
 
@@ -21,10 +22,11 @@ namespace firefly {
 // database implementation.
 class ConnectionPool {
  public:
-  explicit ConnectionPool(std::string url, int max_size);
+  ConnectionPool(std::string url, int max_size,
+                 absl::Duration acquire_timeout);
 
-  // Blocks until a pooled connection is free or a slot opens, then hands out
-  // a pooled or freshly dialed connection.
+  // Waits up to `acquire_timeout` for a pooled connection or an open slot.
+  // Returns DeadlineExceeded when the pool remains exhausted.
   absl::StatusOr<std::unique_ptr<pqxx::connection>> Acquire();
 
   // Returns a connection to the pool. Broken (or closed) connections are
@@ -34,6 +36,7 @@ class ConnectionPool {
  private:
   const std::string url_;
   const int max_size_;
+  const absl::Duration acquire_timeout_;
 
   std::mutex mu_;
   std::condition_variable cv_;
