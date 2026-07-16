@@ -6,8 +6,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "src/common/http.h"
-#include "tests/fakes/fake_http_client.h"
-#include "tests/status_matchers.h"
+#include "tests/fakes/common/fake_http_client.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {

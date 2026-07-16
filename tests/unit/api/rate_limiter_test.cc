@@ -8,7 +8,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/time/time.h"
 #include "gtest/gtest.h"
-#include "tests/fakes/fake_clock.h"
+#include "tests/fakes/common/fake_clock.h"
 
 namespace firefly {
 namespace {

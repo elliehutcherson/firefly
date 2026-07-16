@@ -15,10 +15,10 @@
 #include "src/auth/turnstile.h"
 #include "src/auth/user_repo.h"
 #include "src/db/db.h"
-#include "tests/fakes/fake_clock.h"
-#include "tests/fakes/fake_db.h"
-#include "tests/fakes/fake_http_client.h"
-#include "tests/status_matchers.h"
+#include "tests/fakes/common/fake_clock.h"
+#include "tests/fakes/db/fake_db.h"
+#include "tests/fakes/common/fake_http_client.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {

@@ -13,24 +13,25 @@
 #include "src/common/money.h"
 #include "src/marketdata/alpaca.h"
 #include "src/marketdata/provider.h"
-#include "tests/status_matchers.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {
 
 using ::absl_testing::StatusIs;
 
-// End-to-end tests against the real Alpaca data API; the one place the
-// vendor contract is checked. Skipped unless APCA_API_KEY_ID /
+// Live integration tests against the real Alpaca data API; the one place the
+// vendor boundary is checked. Skipped unless APCA_API_KEY_ID /
 // APCA_API_SECRET_KEY are set (a free paper-trading account works).
-// Run with: ctest --test-dir build -L e2e
-class AlpacaE2eTest : public ::testing::Test {
+// Run with: ctest --test-dir build -L integration
+class AlpacaLiveTest : public ::testing::Test {
  protected:
   void SetUp() override {
     const Config config = Config::FromEnv();
     if (config.alpaca_key_id.empty() || config.alpaca_secret_key.empty()) {
       GTEST_SKIP()
-          << "set APCA_API_KEY_ID / APCA_API_SECRET_KEY to run Alpaca e2e";
+          << "set APCA_API_KEY_ID / APCA_API_SECRET_KEY to run live Alpaca "
+             "integration tests";
     }
     http_ = CreateHttpClient();
     provider_ = std::make_unique<AlpacaProvider>(
@@ -43,7 +44,7 @@ class AlpacaE2eTest : public ::testing::Test {
   std::unique_ptr<AlpacaProvider> provider_;
 };
 
-TEST_F(AlpacaE2eTest, LatestTradeForAaplIsRecentAndPositive) {
+TEST_F(AlpacaLiveTest, LatestTradeForAaplIsRecentAndPositive) {
   absl::StatusOr<Trade> trade = provider_->GetLatestTrade("AAPL");
   ASSERT_OK(trade);
   EXPECT_GT(trade->price_e4, 0);
@@ -52,7 +53,7 @@ TEST_F(AlpacaE2eTest, LatestTradeForAaplIsRecentAndPositive) {
   EXPECT_LT(trade->time, absl::Now() + absl::Minutes(5));
 }
 
-TEST_F(AlpacaE2eTest, HistoricDailyBarsAreStable) {
+TEST_F(AlpacaLiveTest, HistoricDailyBarsAreStable) {
   // A clean Mon-Fri trading week with no US market holiday. Exact prices
   // are not asserted: adjustment=split rescales history at every split.
   absl::StatusOr<std::vector<Bar>> bars = provider_->GetDailyBars(
@@ -75,7 +76,7 @@ TEST_F(AlpacaE2eTest, HistoricDailyBarsAreStable) {
   }
 }
 
-TEST_F(AlpacaE2eTest, UnknownSymbolIsNotFound) {
+TEST_F(AlpacaLiveTest, UnknownSymbolIsNotFound) {
   // Vendor-behavior-dependent: pins Alpaca's 404 for unknown symbols, the
   // one live check that the StatusFromHttp mapping matches reality.
   EXPECT_THAT(provider_->GetLatestTrade("ZZZZZZZZ"),

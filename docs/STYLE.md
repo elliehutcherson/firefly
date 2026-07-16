@@ -112,9 +112,24 @@ programming errors only, never for conditions that can occur at runtime.
 - Propagate errors with `RETURN_IF_ERROR` and `ASSIGN_OR_RETURN` from
   `src/common/status_macros.h` — these two are the sanctioned exception to
   the no-macros rule. Don't hand-write `if (!status.ok()) return status;`.
-- In tests, assert with `EXPECT_OK`/`ASSERT_OK` (`tests/status_matchers.h`)
+- In tests, assert with `EXPECT_OK`/`ASSERT_OK`
+  (`tests/support/status_matchers.h`)
   and match error codes with `absl_testing::StatusIs` — never a bare
   `EXPECT_FALSE(result.ok())`, which passes for the *wrong* error.
+
+## Test organization
+
+- `tests/unit/` mirrors `src/`; keep one test file per production class or
+  cohesive production source file.
+- `tests/integration/` contains tests that cross a real infrastructure or
+  vendor boundary. `tests/e2e/` is reserved for tests that exercise the full
+  application through its public interface.
+- Shared fakes live under `tests/fakes/<domain>/`. A fake used by only one test
+  stays local to that test file.
+- `tests/fuzz/` and `tests/performance/` are created only for actual fuzz
+  targets and benchmarks. Timing assertions are not performance tests.
+- Unit tests are hermetic and run by default. Integration and e2e tests must
+  be labeled accordingly in CMake.
 
 ## Logging
 

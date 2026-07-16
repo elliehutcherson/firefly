@@ -28,6 +28,11 @@ brew install cmake pkg-config libpq curl libsodium
 ./scripts/build_and_test.sh
 ```
 
+The default run is hermetic. Set `RUN_INTEGRATION=1` to include tests against
+local Postgres and the live Alpaca API; unavailable services self-skip.
+`RUN_E2E=1` is reserved for running all categories, including future full-app
+end-to-end tests.
+
 ## Run locally
 
 Podman and Docker both work; scripts auto-detect (podman preferred, override

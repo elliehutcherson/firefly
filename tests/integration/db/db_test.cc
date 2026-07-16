@@ -12,7 +12,7 @@
 #include "src/common/config.h"
 #include "src/common/money.h"
 #include "src/marketdata/candle_repo.h"
-#include "tests/status_matchers.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {

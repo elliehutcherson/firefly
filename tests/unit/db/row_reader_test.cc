@@ -7,7 +7,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "src/db/db_types.h"
-#include "tests/status_matchers.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {

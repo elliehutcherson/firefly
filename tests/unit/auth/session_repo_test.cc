@@ -8,8 +8,8 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tests/fakes/fake_db.h"
-#include "tests/status_matchers.h"
+#include "tests/fakes/db/fake_db.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {

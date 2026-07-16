@@ -4,7 +4,7 @@
 #include "absl/status/statusor.h"
 #include "gtest/gtest.h"
 #include "src/common/http.h"
-#include "tests/status_matchers.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {

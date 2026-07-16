@@ -5,7 +5,7 @@
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tests/status_matchers.h"
+#include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {
