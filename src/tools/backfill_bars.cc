@@ -31,7 +31,7 @@
 #include "absl/time/time.h"
 #include "src/common/clock.h"
 #include "src/common/config.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
 #include "src/common/http.h"
 #include "src/jobs/daily_bar_sync.h"
 #include "src/marketdata/alpaca.h"

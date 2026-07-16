@@ -1,6 +1,7 @@
 #include "src/api/auth_handlers.h"
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -14,6 +15,7 @@
 #include "src/auth/session_repo.h"
 #include "src/auth/user_repo.h"
 #include "src/common/status_macros.h"
+#include "src/db/transaction.h"
 
 namespace firefly {
 namespace {
@@ -95,6 +97,17 @@ absl::StatusOr<std::string> StartSession(
   return token;
 }
 
+absl::StatusOr<std::string> StartSession(
+    const AuthDeps& deps, Transaction& transaction, int64_t user_id,
+    const std::optional<std::string>& client_ip) {
+  const std::string token = GenerateSessionToken();
+  const absl::Time now = deps.clock->Now();
+  RETURN_IF_ERROR(deps.sessions->CreateSession(
+      transaction, Sha256Hex(token), user_id, now, now + deps.session_ttl,
+      client_ip));
+  return token;
+}
+
 // Session lookup shared by /me (and, later, everything authenticated).
 // Renews the sliding window at most once per kTouchInterval.
 absl::StatusOr<SessionRecord> RequireSession(const AuthDeps& deps,
@@ -166,14 +179,17 @@ absl::StatusOr<AuthResult> Signup(const AuthDeps& deps,
   }
   ASSIGN_OR_RETURN(const std::string password_hash,
                    HashPassword(credentials.password));
+  ASSIGN_OR_RETURN(std::unique_ptr<Transaction> transaction, deps.db->Begin());
   const absl::StatusOr<int64_t> user_id = deps.users->CreateUser(
-      credentials.username, password_hash, credentials.email, client_ip);
+      *transaction, credentials.username, password_hash, credentials.email,
+      client_ip);
   if (absl::IsAlreadyExists(user_id.status())) {
     return absl::AlreadyExistsError("username is taken");
   }
   RETURN_IF_ERROR(user_id.status());
   ASSIGN_OR_RETURN(const std::string token,
-                   StartSession(deps, *user_id, client_ip));
+                   StartSession(deps, *transaction, *user_id, client_ip));
+  RETURN_IF_ERROR(transaction->Commit());
   return AuthResult{
       .body = {{"user_id", *user_id}, {"username", credentials.username}},
       .set_session_token = token};

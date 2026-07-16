@@ -5,8 +5,9 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "src/common/db.h"
 #include "src/common/status_macros.h"
+#include "src/db/db.h"
+#include "src/db/row_reader.h"
 
 namespace firefly {
 
@@ -18,10 +19,10 @@ absl::StatusOr<std::vector<std::string>> InstrumentRepo::ListActiveSymbols() {
   std::vector<std::string> symbols;
   symbols.reserve(rows.size());
   for (const Row& row : rows) {
-    if (row.columns.empty() || !row.columns[0].has_value()) {
-      return absl::InternalError("instruments row with NULL symbol");
-    }
-    symbols.push_back(*row.columns[0]);
+    ASSIGN_OR_RETURN(
+        const absl::string_view symbol,
+        RowReader(row, "instruments").RequiredString(0));
+    symbols.emplace_back(symbol);
   }
   return symbols;
 }

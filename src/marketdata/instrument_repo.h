@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
 
 namespace firefly {
 

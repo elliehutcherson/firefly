@@ -13,8 +13,8 @@
 #include "src/auth/user_repo.h"
 #include "src/common/clock.h"
 #include "src/common/config.h"
-#include "src/common/db.h"
 #include "src/common/http.h"
+#include "src/db/db.h"
 #include "src/jobs/daily_bar_sync.h"
 #include "src/jobs/job_runner.h"
 #include "src/marketdata/alpaca.h"
@@ -121,7 +121,8 @@ int main() {
                   .candles = &candles,
                   .provider = provider.get(),
                   .clock = clock.get()},
-       .auth = {.users = &users,
+       .auth = {.db = db->get(),
+                .users = &users,
                 .sessions = &sessions,
                 .turnstile = &turnstile,
                 .clock = clock.get(),

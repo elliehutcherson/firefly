@@ -15,28 +15,13 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/civil_time.h"
-#include "src/common/db.h"
 #include "src/common/money.h"
 #include "src/common/status_macros.h"
+#include "src/db/db.h"
+#include "src/db/row_reader.h"
 
 namespace firefly {
 namespace {
-
-absl::StatusOr<absl::string_view> GetColumn(const Row& row, size_t index) {
-  if (index >= row.columns.size() || !row.columns[index].has_value()) {
-    return absl::InternalError(
-        absl::StrCat("candles_daily row missing column ", index));
-  }
-  return absl::string_view(*row.columns[index]);
-}
-
-absl::StatusOr<absl::CivilDay> ParseDay(absl::string_view text) {
-  absl::CivilDay day;
-  if (!absl::ParseCivilTime(text, &day)) {
-    return absl::InternalError(absl::StrCat("bad date from db: '", text, "'"));
-  }
-  return day;
-}
 
 template <typename T>
 concept CandleFieldFormatter =
@@ -72,22 +57,18 @@ absl::StatusOr<std::vector<DailyCandle>> CandleRepo::GetRange(
   std::vector<DailyCandle> candles;
   candles.reserve(rows.size());
   for (const Row& row : rows) {
+    const RowReader reader(row, "candles_daily");
     DailyCandle candle;
-    ASSIGN_OR_RETURN(const absl::string_view day, GetColumn(row, 0));
-    ASSIGN_OR_RETURN(candle.day, ParseDay(day));
-    ASSIGN_OR_RETURN(const absl::string_view open, GetColumn(row, 1));
+    ASSIGN_OR_RETURN(candle.day, reader.CivilDay(0));
+    ASSIGN_OR_RETURN(const absl::string_view open, reader.RequiredString(1));
     ASSIGN_OR_RETURN(candle.open_e4, PriceE4FromString(open));
-    ASSIGN_OR_RETURN(const absl::string_view high, GetColumn(row, 2));
+    ASSIGN_OR_RETURN(const absl::string_view high, reader.RequiredString(2));
     ASSIGN_OR_RETURN(candle.high_e4, PriceE4FromString(high));
-    ASSIGN_OR_RETURN(const absl::string_view low, GetColumn(row, 3));
+    ASSIGN_OR_RETURN(const absl::string_view low, reader.RequiredString(3));
     ASSIGN_OR_RETURN(candle.low_e4, PriceE4FromString(low));
-    ASSIGN_OR_RETURN(const absl::string_view close, GetColumn(row, 4));
+    ASSIGN_OR_RETURN(const absl::string_view close, reader.RequiredString(4));
     ASSIGN_OR_RETURN(candle.close_e4, PriceE4FromString(close));
-    ASSIGN_OR_RETURN(const absl::string_view volume, GetColumn(row, 5));
-    if (!absl::SimpleAtoi(volume, &candle.volume)) {
-      return absl::InternalError(
-          absl::StrCat("bad volume from db: '", volume, "'"));
-    }
+    ASSIGN_OR_RETURN(candle.volume, reader.Int64(5));
     candles.push_back(candle);
   }
   return candles;
@@ -140,9 +121,10 @@ CandleRepo::LatestDays() {
   absl::flat_hash_map<std::string, absl::CivilDay> latest;
   latest.reserve(rows.size());
   for (const Row& row : rows) {
-    ASSIGN_OR_RETURN(const absl::string_view symbol, GetColumn(row, 0));
-    ASSIGN_OR_RETURN(const absl::string_view day, GetColumn(row, 1));
-    ASSIGN_OR_RETURN(latest[symbol], ParseDay(day));
+    const RowReader reader(row, "candles_daily");
+    ASSIGN_OR_RETURN(const absl::string_view symbol, reader.RequiredString(0));
+    ASSIGN_OR_RETURN(const absl::CivilDay day, reader.CivilDay(1));
+    latest[std::string(symbol)] = day;
   }
   return latest;
 }

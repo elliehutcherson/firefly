@@ -9,10 +9,11 @@ add_library(firefly_lib
     auth/user_repo.cc
     common/clock.cc
     common/config.cc
-    common/db.cc
-    common/db_pool.cc
     common/http.cc
     common/money.cc
+    db/connection_pool.cc
+    db/db.cc
+    db/row_reader.cc
     jobs/daily_bar_sync.cc
     jobs/job_runner.cc
     marketdata/alpaca.cc

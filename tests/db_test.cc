@@ -1,4 +1,4 @@
-#include "src/common/db.h"
+#include "src/db/db.h"
 
 #include <memory>
 #include <optional>
@@ -153,6 +153,55 @@ TEST_F(DbTest, UniqueViolationIsAlreadyExists) {
   EXPECT_THAT(db_->Execute("INSERT INTO dup_probe VALUES ('a')"),
               StatusIs(absl::StatusCode::kAlreadyExists));
   ASSERT_OK(db_->Execute("DROP TABLE dup_probe"));
+}
+
+TEST_F(DbTest, TransactionCommitsAllStatements) {
+  ASSERT_OK(db_->Execute("DROP TABLE IF EXISTS transaction_probe"));
+  ASSERT_OK(db_->Execute(
+      "CREATE TABLE transaction_probe (value BIGINT NOT NULL)"));
+
+  absl::StatusOr<std::unique_ptr<Transaction>> transaction = db_->Begin();
+  ASSERT_OK(transaction);
+  ASSERT_OK((*transaction)->Execute(
+      "INSERT INTO transaction_probe VALUES ($1)", {"10"}));
+  ASSERT_OK((*transaction)->Execute(
+      "INSERT INTO transaction_probe VALUES ($1)", {"20"}));
+  ASSERT_OK((*transaction)->Commit());
+
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT sum(value) FROM transaction_probe");
+  ASSERT_OK(rows);
+  EXPECT_EQ((*rows)[0].columns[0], "30");
+  ASSERT_OK(db_->Execute("DROP TABLE transaction_probe"));
+}
+
+TEST_F(DbTest, TransactionDestructionRollsBack) {
+  ASSERT_OK(db_->Execute("DROP TABLE IF EXISTS transaction_probe"));
+  ASSERT_OK(db_->Execute(
+      "CREATE TABLE transaction_probe (value BIGINT NOT NULL)"));
+
+  {
+    absl::StatusOr<std::unique_ptr<Transaction>> transaction = db_->Begin();
+    ASSERT_OK(transaction);
+    ASSERT_OK((*transaction)->Execute(
+        "INSERT INTO transaction_probe VALUES ($1)", {"10"}));
+  }
+
+  absl::StatusOr<Rows> rows =
+      db_->Query("SELECT count(*) FROM transaction_probe");
+  ASSERT_OK(rows);
+  EXPECT_EQ((*rows)[0].columns[0], "0");
+  ASSERT_OK(db_->Execute("DROP TABLE transaction_probe"));
+}
+
+TEST_F(DbTest, FinishedTransactionRejectsFurtherUse) {
+  absl::StatusOr<std::unique_ptr<Transaction>> transaction = db_->Begin();
+  ASSERT_OK(transaction);
+  ASSERT_OK((*transaction)->Commit());
+  EXPECT_THAT((*transaction)->Query("SELECT 1"),
+              StatusIs(absl::StatusCode::kFailedPrecondition));
+  EXPECT_THAT((*transaction)->Commit(),
+              StatusIs(absl::StatusCode::kFailedPrecondition));
 }
 
 TEST(DbOpenTest, BadUrlIsUnavailable) {

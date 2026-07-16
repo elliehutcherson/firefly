@@ -6,10 +6,10 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/time/time.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
+#include "src/db/row_reader.h"
 #include "src/common/status_macros.h"
 
 namespace firefly {
@@ -24,20 +24,35 @@ std::string FormatTimestamp(absl::Time t) {
   return absl::FormatTime(absl::RFC3339_full, t, absl::UTCTimeZone());
 }
 
-}  // namespace
-
-absl::Status SessionRepo::CreateSession(const std::string& token_sha256_hex,
-                                        int64_t user_id, absl::Time now,
-                                        absl::Time expires_at,
-                                        const std::optional<std::string>& ip) {
-  return db_
-      ->Execute(
+absl::Status InsertSession(SqlExecutor& executor,
+                           const std::string& token_sha256_hex, int64_t user_id,
+                           absl::Time now, absl::Time expires_at,
+                           const std::optional<std::string>& ip) {
+  return executor
+      .Execute(
           "INSERT INTO sessions (token_hash, user_id, created_at, "
           "expires_at, last_seen_at, ip) VALUES ($1::bytea, $2, "
           "$3::timestamptz, $4::timestamptz, $3::timestamptz, $5::inet)",
           {ByteaLiteral(token_sha256_hex), absl::StrCat(user_id),
            FormatTimestamp(now), FormatTimestamp(expires_at), ip})
       .status();
+}
+
+}  // namespace
+
+absl::Status SessionRepo::CreateSession(const std::string& token_sha256_hex,
+                                        int64_t user_id, absl::Time now,
+                                        absl::Time expires_at,
+                                        const std::optional<std::string>& ip) {
+  return InsertSession(*db_, token_sha256_hex, user_id, now, expires_at, ip);
+}
+
+absl::Status SessionRepo::CreateSession(
+    Transaction& transaction, const std::string& token_sha256_hex,
+    int64_t user_id, absl::Time now, absl::Time expires_at,
+    const std::optional<std::string>& ip) {
+  return InsertSession(transaction, token_sha256_hex, user_id, now, expires_at,
+                       ip);
 }
 
 absl::StatusOr<std::optional<SessionRecord>> SessionRepo::FindSession(
@@ -53,17 +68,10 @@ absl::StatusOr<std::optional<SessionRecord>> SessionRepo::FindSession(
   if (rows.empty()) {
     return std::nullopt;
   }
-  const Row& row = rows[0];
-  if (row.columns.size() < 2 || !row.columns[0].has_value() ||
-      !row.columns[1].has_value()) {
-    return absl::InternalError("sessions row missing columns");
-  }
+  const RowReader row(rows[0], "sessions");
   SessionRecord record;
-  int64_t epoch_seconds = 0;
-  if (!absl::SimpleAtoi(*row.columns[0], &record.user_id) ||
-      !absl::SimpleAtoi(*row.columns[1], &epoch_seconds)) {
-    return absl::InternalError("bad integer in sessions row");
-  }
+  ASSIGN_OR_RETURN(record.user_id, row.Int64(0));
+  ASSIGN_OR_RETURN(const int64_t epoch_seconds, row.Int64(1));
   record.last_seen_at = absl::FromUnixSeconds(epoch_seconds);
   return record;
 }

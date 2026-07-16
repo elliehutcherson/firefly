@@ -11,6 +11,7 @@
 #include "src/auth/turnstile.h"
 #include "src/auth/user_repo.h"
 #include "src/common/clock.h"
+#include "src/db/db.h"
 
 namespace firefly {
 
@@ -20,6 +21,7 @@ namespace firefly {
 
 // All borrowed, all non-owning.
 struct AuthDeps {
+  Db* db = nullptr;
   UserRepo* users = nullptr;
   SessionRepo* sessions = nullptr;
   TurnstileVerifier* turnstile = nullptr;

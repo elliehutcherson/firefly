@@ -8,7 +8,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
+#include "src/db/transaction.h"
 
 namespace firefly {
 
@@ -28,6 +29,12 @@ class SessionRepo {
   explicit SessionRepo(Db* db) : db_(db) {}
 
   absl::Status CreateSession(const std::string& token_sha256_hex,
+                             int64_t user_id, absl::Time now,
+                             absl::Time expires_at,
+                             const std::optional<std::string>& ip);
+
+  absl::Status CreateSession(Transaction& transaction,
+                             const std::string& token_sha256_hex,
                              int64_t user_id, absl::Time now,
                              absl::Time expires_at,
                              const std::optional<std::string>& ip);

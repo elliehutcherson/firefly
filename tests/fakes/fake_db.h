@@ -3,21 +3,18 @@
 
 #include <cstdint>
 #include <deque>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
+#include "tests/fakes/fake_db_types.h"
+#include "tests/fakes/fake_transaction.h"
 
 namespace firefly {
-
-// One statement recorded by FakeDb.
-struct FakeDbCall {
-  std::string sql;
-  DbParams params;
-};
 
 // Replays canned results and records every statement it receives.
 class FakeDb : public Db {
@@ -49,10 +46,19 @@ class FakeDb : public Db {
 
   absl::Status Ping() override { return ping_status; }
 
+  absl::StatusOr<std::unique_ptr<Transaction>> Begin() override {
+    ++transaction_begins;
+    return std::make_unique<FakeTransaction>(&calls, &query_results,
+                                             &execute_results,
+                                             &transaction_commits);
+  }
+
   std::vector<FakeDbCall> calls;
   std::deque<absl::StatusOr<Rows>> query_results;
   std::deque<absl::StatusOr<int64_t>> execute_results;
   absl::Status ping_status;  // OK unless a test sets an outage.
+  int transaction_begins = 0;
+  int transaction_commits = 0;
 };
 
 }  // namespace firefly

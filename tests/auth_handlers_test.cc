@@ -14,7 +14,7 @@
 #include "src/auth/session_repo.h"
 #include "src/auth/turnstile.h"
 #include "src/auth/user_repo.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
 #include "tests/fakes/fake_clock.h"
 #include "tests/fakes/fake_db.h"
 #include "tests/fakes/fake_http_client.h"
@@ -36,7 +36,8 @@ constexpr char kIp[] = "203.0.113.7";
 class AuthHandlersTest : public ::testing::Test {
  protected:
   AuthDeps Deps() {
-    return {.users = &users_,
+    return {.db = &db_,
+            .users = &users_,
             .sessions = &sessions_,
             .turnstile = &turnstile_,
             .clock = &clock_,
@@ -107,6 +108,8 @@ TEST_F(AuthHandlersTest, SignupHappyPathStoresHashNotToken) {
   ASSERT_TRUE(session_params[0].has_value());
   EXPECT_EQ(*session_params[0],
             std::string("\\x") + Sha256Hex(result->set_session_token));
+  EXPECT_EQ(db_.transaction_begins, 1);
+  EXPECT_EQ(db_.transaction_commits, 1);
 }
 
 TEST_F(AuthHandlersTest, SignupWithoutIpSkipsTheCapQuery) {
@@ -135,6 +138,20 @@ TEST_F(AuthHandlersTest, SignupDuplicateUsernameIs409) {
   EXPECT_THAT(Signup(Deps(), R"({"username":"ellie","password":"hunter2222"})",
                      kIp),
               StatusIs(absl::StatusCode::kAlreadyExists));
+  EXPECT_EQ(db_.transaction_begins, 1);
+  EXPECT_EQ(db_.transaction_commits, 0);
+}
+
+TEST_F(AuthHandlersTest, SignupSessionFailureDoesNotCommitUser) {
+  db_.query_results.push_back(Rows{Row{{"0"}}});
+  db_.query_results.push_back(Rows{Row{{"42"}}});
+  db_.execute_results.push_back(absl::UnavailableError("session insert failed"));
+
+  EXPECT_THAT(Signup(Deps(), R"({"username":"ellie","password":"hunter2222"})",
+                     kIp),
+              StatusIs(absl::StatusCode::kUnavailable));
+  EXPECT_EQ(db_.transaction_begins, 1);
+  EXPECT_EQ(db_.transaction_commits, 0);
 }
 
 TEST_F(AuthHandlersTest, SignupValidationRejects) {

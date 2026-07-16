@@ -21,6 +21,10 @@ add_executable(db_test db_test.cc)
 target_link_libraries(db_test PRIVATE firefly_test_support)
 gtest_discover_tests(db_test PROPERTIES LABELS e2e)
 
+add_executable(row_reader_test row_reader_test.cc)
+target_link_libraries(row_reader_test PRIVATE firefly_test_support)
+gtest_discover_tests(row_reader_test)
+
 add_executable(crypto_test crypto_test.cc)
 target_link_libraries(crypto_test PRIVATE firefly_test_support)
 gtest_discover_tests(crypto_test)

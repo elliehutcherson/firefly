@@ -109,7 +109,7 @@ src/
 ```
 
 Modules expose narrow interfaces; `api/` is the only module that knows about
-HTTP, `common/db` is the only place that touches connection handling.
+HTTP, and `db/` is the only module that touches connection handling.
 
 ## System diagram
 

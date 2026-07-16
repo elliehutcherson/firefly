@@ -1,4 +1,4 @@
-#include "src/common/db_pool.h"
+#include "src/db/connection_pool.h"
 
 #include <memory>
 #include <pqxx/pqxx>
@@ -8,10 +8,10 @@
 
 namespace firefly {
 
-DbPool::DbPool(std::string url, int max_size)
+ConnectionPool::ConnectionPool(std::string url, int max_size)
     : url_(std::move(url)), max_size_(max_size) {}
 
-absl::StatusOr<std::unique_ptr<pqxx::connection>> DbPool::Acquire() {
+absl::StatusOr<std::unique_ptr<pqxx::connection>> ConnectionPool::Acquire() {
   {
     std::unique_lock<std::mutex> lock(mu_);
     cv_.wait(lock,
@@ -36,7 +36,8 @@ absl::StatusOr<std::unique_ptr<pqxx::connection>> DbPool::Acquire() {
   }
 }
 
-void DbPool::Release(std::unique_ptr<pqxx::connection> conn, bool broken) {
+void ConnectionPool::Release(std::unique_ptr<pqxx::connection> conn,
+                             bool broken) {
   {
     std::lock_guard<std::mutex> lock(mu_);
     if (broken || conn == nullptr || !conn->is_open()) {

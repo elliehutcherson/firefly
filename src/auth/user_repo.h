@@ -7,7 +7,8 @@
 
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
+#include "src/db/transaction.h"
 
 namespace firefly {
 
@@ -40,6 +41,14 @@ class UserRepo {
                                      const std::string& password_hash,
                                      const std::optional<std::string>& email,
                                      const std::optional<std::string>& signup_ip);
+
+  // Transactional form used when user creation is one part of a larger
+  // invariant, such as signup's user-plus-session write.
+  absl::StatusOr<int64_t> CreateUser(
+      Transaction& transaction, const std::string& username,
+      const std::string& password_hash,
+      const std::optional<std::string>& email,
+      const std::optional<std::string>& signup_ip);
 
   // Case-insensitive lookup; nullopt when no such user.
   absl::StatusOr<std::optional<UserRecord>> FindUserByUsername(

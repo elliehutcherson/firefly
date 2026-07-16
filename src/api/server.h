@@ -4,7 +4,7 @@
 #include "src/api/auth_handlers.h"
 #include "src/api/market_handlers.h"
 #include "src/common/config.h"
-#include "src/common/db.h"
+#include "src/db/db.h"
 
 namespace firefly {
 
