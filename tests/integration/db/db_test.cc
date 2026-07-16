@@ -8,6 +8,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/time/civil_time.h"
+#include "absl/time/time.h"
 #include "gtest/gtest.h"
 #include "src/common/config.h"
 #include "src/common/money.h"
@@ -153,6 +154,57 @@ TEST_F(DbTest, UniqueViolationIsAlreadyExists) {
   EXPECT_THAT(db_->Execute("INSERT INTO dup_probe VALUES ('a')"),
               StatusIs(absl::StatusCode::kAlreadyExists));
   ASSERT_OK(db_->Execute("DROP TABLE dup_probe"));
+}
+
+TEST_F(DbTest, SchemaRejectsInvalidMarketData) {
+  EXPECT_THAT(db_->Execute(
+                  "INSERT INTO instruments (symbol, name, exchange) "
+                  "VALUES ('bad symbol', 'Bad', 'TEST')"),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(db_->Execute(
+                  "INSERT INTO candles_daily "
+                  "(symbol, day, open, high, low, close, volume) VALUES "
+                  "('AAPL', '1970-02-02', 10, 9, 8, 9, 100)"),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(db_->Execute(
+                  "INSERT INTO candles_daily "
+                  "(symbol, day, open, high, low, close, volume) VALUES "
+                  "('AAPL', '1970-02-02', 10, 11, 8, 9, -1)"),
+              StatusIs(absl::StatusCode::kInternal));
+}
+
+TEST_F(DbTest, SchemaRejectsInvalidTradingRows) {
+  const std::string username =
+      "schema_probe_" + std::to_string(absl::ToUnixMicros(absl::Now()));
+  absl::StatusOr<Rows> users = db_->Query(
+      "INSERT INTO users (username, password_hash) VALUES ($1, 'probe') "
+      "RETURNING id",
+      {username});
+  ASSERT_OK(users);
+  ASSERT_EQ(users->size(), 1);
+  ASSERT_TRUE((*users)[0].columns[0].has_value());
+  const std::string user_id = *(*users)[0].columns[0];
+
+  EXPECT_THAT(db_->Execute(
+                  "INSERT INTO orders "
+                  "(user_id, symbol, side, quantity, price, cash_delta_cents) "
+                  "VALUES ($1, 'AAPL', 'buy', 1, 0, 0)",
+                  {user_id}),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(db_->Execute(
+                  "INSERT INTO positions "
+                  "(user_id, symbol, quantity, avg_price) "
+                  "VALUES ($1, 'AAPL', 0, 10)",
+                  {user_id}),
+              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(db_->Execute(
+                  "INSERT INTO positions "
+                  "(user_id, symbol, quantity, avg_price) "
+                  "VALUES ($1, 'AAPL', 1, 0)",
+                  {user_id}),
+              StatusIs(absl::StatusCode::kInternal));
+
+  EXPECT_OK(db_->Execute("DELETE FROM users WHERE id = $1", {user_id}));
 }
 
 TEST_F(DbTest, TransactionCommitsAllStatements) {
