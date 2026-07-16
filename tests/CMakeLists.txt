@@ -25,6 +25,14 @@ add_executable(crypto_test crypto_test.cc)
 target_link_libraries(crypto_test PRIVATE firefly_test_support)
 gtest_discover_tests(crypto_test)
 
+add_executable(auth_handlers_test auth_handlers_test.cc)
+target_link_libraries(auth_handlers_test PRIVATE firefly_test_support)
+gtest_discover_tests(auth_handlers_test)
+
+add_executable(rate_limiter_test rate_limiter_test.cc)
+target_link_libraries(rate_limiter_test PRIVATE firefly_test_support)
+gtest_discover_tests(rate_limiter_test)
+
 add_executable(user_repo_test user_repo_test.cc)
 target_link_libraries(user_repo_test PRIVATE firefly_test_support)
 gtest_discover_tests(user_repo_test)

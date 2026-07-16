@@ -1,5 +1,7 @@
 add_library(firefly_lib
+    api/auth_handlers.cc
     api/market_handlers.cc
+    api/rate_limiter.cc
     api/server.cc
     auth/crypto.cc
     auth/session_repo.cc
