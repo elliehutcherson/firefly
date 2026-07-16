@@ -21,7 +21,7 @@ using ::testing::HasSubstr;
 TEST(UserRepoTest, CreateUserBindsAllParamsAndReturnsId) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"42"}}});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   absl::StatusOr<int64_t> id = repo.CreateUser(
       "ellie", "$argon2id$fake", "e@example.com", "203.0.113.7");
@@ -38,7 +38,7 @@ TEST(UserRepoTest, CreateUserBindsAllParamsAndReturnsId) {
 TEST(UserRepoTest, CreateUserBindsNullEmailAndIp) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"7"}}});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   ASSERT_OK(repo.CreateUser("ellie", "hash", std::nullopt, std::nullopt));
   EXPECT_THAT(db.calls[0].params,
@@ -48,7 +48,7 @@ TEST(UserRepoTest, CreateUserBindsNullEmailAndIp) {
 TEST(UserRepoTest, CreateUserPropagatesAlreadyExists) {
   FakeDb db;
   db.query_results.push_back(absl::AlreadyExistsError("dup [sqlstate 23505]"));
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   EXPECT_THAT(repo.CreateUser("ellie", "hash", std::nullopt, std::nullopt),
               StatusIs(absl::StatusCode::kAlreadyExists));
@@ -57,7 +57,7 @@ TEST(UserRepoTest, CreateUserPropagatesAlreadyExists) {
 TEST(UserRepoTest, FindUserByUsernameIsCaseInsensitiveLookup) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"42", "Ellie", "$argon2id$x"}}});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   absl::StatusOr<std::optional<UserRecord>> user =
       repo.FindUserByUsername("ELLIE");
@@ -72,7 +72,7 @@ TEST(UserRepoTest, FindUserByUsernameIsCaseInsensitiveLookup) {
 TEST(UserRepoTest, FindUserMissingIsNulloptNotError) {
   FakeDb db;
   db.query_results.push_back(Rows{});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   absl::StatusOr<std::optional<UserRecord>> user =
       repo.FindUserByUsername("ghost");
@@ -83,7 +83,7 @@ TEST(UserRepoTest, FindUserMissingIsNulloptNotError) {
 TEST(UserRepoTest, CountRecentSignupsBindsIpAndSince) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"2"}}});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   absl::StatusOr<int64_t> count = repo.CountRecentSignups(
       "203.0.113.7", absl::FromUnixSeconds(1786000000));
@@ -99,7 +99,7 @@ TEST(UserRepoTest, GetUserMapsProfileAndNullEmail) {
   FakeDb db;
   db.query_results.push_back(
       Rows{Row{{"42", "ellie", std::nullopt, "1000000"}}});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   absl::StatusOr<UserProfile> profile = repo.GetUser(42);
   ASSERT_OK(profile);
@@ -112,7 +112,7 @@ TEST(UserRepoTest, GetUserMapsProfileAndNullEmail) {
 TEST(UserRepoTest, GetUserMissingIsNotFound) {
   FakeDb db;
   db.query_results.push_back(Rows{});
-  UserRepo repo(&db);
+  UserRepo repo(db);
 
   EXPECT_THAT(repo.GetUser(999), StatusIs(absl::StatusCode::kNotFound));
 }

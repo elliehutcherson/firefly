@@ -17,7 +17,7 @@ absl::Time TestNow() { return absl::FromUnixSeconds(1786000000); }
 
 TEST(RateLimiterTest, AllowsBurstThenDenies) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 1.0,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 1.0,
                                           .burst = 3});
 
   EXPECT_TRUE(limiter.Allow("ip:1"));
@@ -28,7 +28,7 @@ TEST(RateLimiterTest, AllowsBurstThenDenies) {
 
 TEST(RateLimiterTest, RefillsOverTime) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 1.0,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 1.0,
                                           .burst = 2});
 
   EXPECT_TRUE(limiter.Allow("ip:1"));
@@ -41,7 +41,7 @@ TEST(RateLimiterTest, RefillsOverTime) {
 
 TEST(RateLimiterTest, RefillCapsAtBurst) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 1.0,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 1.0,
                                           .burst = 2});
 
   EXPECT_TRUE(limiter.Allow("ip:1"));
@@ -53,7 +53,7 @@ TEST(RateLimiterTest, RefillCapsAtBurst) {
 
 TEST(RateLimiterTest, KeysAreIndependent) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 1.0,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 1.0,
                                           .burst = 1});
 
   EXPECT_TRUE(limiter.Allow("ip:1"));
@@ -63,7 +63,7 @@ TEST(RateLimiterTest, KeysAreIndependent) {
 
 TEST(RateLimiterTest, SweepsIdleKeysAtCapacity) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 1.0,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 1.0,
                                           .burst = 1,
                                           .max_keys = 2});
 
@@ -77,7 +77,7 @@ TEST(RateLimiterTest, SweepsIdleKeysAtCapacity) {
 
 TEST(RateLimiterTest, FailsOpenWhenAllKeysActive) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 0.001,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 0.001,
                                           .burst = 1,
                                           .max_keys = 2});
 
@@ -90,7 +90,7 @@ TEST(RateLimiterTest, FailsOpenWhenAllKeysActive) {
 
 TEST(RateLimiterTest, ThreadedSmoke) {
   FakeClock clock(TestNow());
-  TokenBucketRateLimiter limiter(&clock, {.tokens_per_second = 1.0,
+  TokenBucketRateLimiter limiter(clock, {.tokens_per_second = 1.0,
                                           .burst = 100});
 
   std::atomic<int> allowed{0};

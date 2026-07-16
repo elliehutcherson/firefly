@@ -52,7 +52,7 @@ struct CacheOptions {
 class CachedProvider : public MarketDataProvider {
  public:
   // `inner` and `clock` are borrowed and must outlive the provider.
-  CachedProvider(MarketDataProvider* inner, const Clock* clock,
+  CachedProvider(MarketDataProvider& inner, const Clock& clock,
                  CacheOptions options)
       : inner_(inner), clock_(clock), options_(options) {}
 
@@ -91,8 +91,8 @@ class CachedProvider : public MarketDataProvider {
   void Trim(Cache<V>& cache, absl::Time now, size_t target_size)
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(cache.mu);
 
-  MarketDataProvider* const inner_;
-  const Clock* const clock_;
+  MarketDataProvider& inner_;
+  const Clock& clock_;
   const CacheOptions options_;
 
   Cache<Trade> trades_;

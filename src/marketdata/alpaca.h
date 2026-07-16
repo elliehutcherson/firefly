@@ -30,7 +30,7 @@ class AlpacaProvider : public MarketDataProvider {
   static constexpr int kMaxBarPages = 100;
 
   // `http` is borrowed and must outlive the provider.
-  explicit AlpacaProvider(AlpacaConfig config, HttpClient* http);
+  explicit AlpacaProvider(AlpacaConfig config, HttpClient& http);
 
   absl::StatusOr<Trade> GetLatestTrade(const std::string& symbol) override;
   absl::StatusOr<std::vector<Bar>> GetDailyBars(const std::string& symbol,
@@ -48,7 +48,7 @@ class AlpacaProvider : public MarketDataProvider {
                                              const std::string& adjustment);
 
   const AlpacaConfig config_;
-  HttpClient* const http_;
+  HttpClient& http_;
 };
 
 }  // namespace firefly

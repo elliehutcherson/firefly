@@ -49,7 +49,7 @@ absl::StatusOr<std::vector<DailyCandle>> CandleRepo::GetRange(
     const std::string& symbol, absl::CivilDay start, absl::CivilDay end) {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT day, open, high, low, close, volume "
+      db_.Query("SELECT day, open, high, low, close, volume "
                  "FROM candles_daily "
                  "WHERE symbol = $1 AND day >= $2 AND day <= $3 ORDER BY day",
                  {symbol, absl::FormatCivilTime(start),
@@ -77,39 +77,37 @@ absl::StatusOr<std::vector<DailyCandle>> CandleRepo::GetRange(
 absl::Status CandleRepo::UpsertCandles(const std::string& symbol,
                                        const std::vector<DailyCandle>& candles) {
   if (candles.empty()) return absl::OkStatus();
-  return db_
-      ->Execute(
-          "INSERT INTO candles_daily "
-          "(symbol, day, open, high, low, close, volume) "
-          "SELECT $1::text, * FROM unnest("
-          "$2::date[], $3::numeric[], $4::numeric[], $5::numeric[], "
-          "$6::numeric[], $7::bigint[]) "
-          "ON CONFLICT (symbol, day) DO NOTHING",
-          {symbol,
-           ArrayLiteral(candles,
-                        [](const DailyCandle& c) {
-                          return absl::FormatCivilTime(c.day);
-                        }),
-           ArrayLiteral(candles,
-                        [](const DailyCandle& c) {
-                          return PriceE4ToString(c.open_e4);
-                        }),
-           ArrayLiteral(candles,
-                        [](const DailyCandle& c) {
-                          return PriceE4ToString(c.high_e4);
-                        }),
-           ArrayLiteral(candles,
-                        [](const DailyCandle& c) {
-                          return PriceE4ToString(c.low_e4);
-                        }),
-           ArrayLiteral(candles,
-                        [](const DailyCandle& c) {
-                          return PriceE4ToString(c.close_e4);
-                        }),
-           ArrayLiteral(candles,
-                        [](const DailyCandle& c) {
-                          return absl::StrCat(c.volume);
-                        })})
+  return db_.Execute(
+             "INSERT INTO candles_daily "
+             "(symbol, day, open, high, low, close, volume) "
+             "SELECT $1::text, * FROM unnest("
+             "$2::date[], $3::numeric[], $4::numeric[], $5::numeric[], "
+             "$6::numeric[], $7::bigint[]) "
+             "ON CONFLICT (symbol, day) DO NOTHING",
+             {symbol,
+              ArrayLiteral(candles,
+                           [](const DailyCandle& c) {
+                             return absl::FormatCivilTime(c.day);
+                           }),
+              ArrayLiteral(candles,
+                           [](const DailyCandle& c) {
+                             return PriceE4ToString(c.open_e4);
+                           }),
+              ArrayLiteral(candles,
+                           [](const DailyCandle& c) {
+                             return PriceE4ToString(c.high_e4);
+                           }),
+              ArrayLiteral(candles,
+                           [](const DailyCandle& c) {
+                             return PriceE4ToString(c.low_e4);
+                           }),
+              ArrayLiteral(candles,
+                           [](const DailyCandle& c) {
+                             return PriceE4ToString(c.close_e4);
+                           }),
+              ArrayLiteral(candles, [](const DailyCandle& c) {
+                return absl::StrCat(c.volume);
+              })})
       .status();
 }
 
@@ -117,7 +115,7 @@ absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>>
 CandleRepo::LatestDays() {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT symbol, max(day) FROM candles_daily GROUP BY symbol"));
+      db_.Query("SELECT symbol, max(day) FROM candles_daily GROUP BY symbol"));
   absl::flat_hash_map<std::string, absl::CivilDay> latest;
   latest.reserve(rows.size());
   for (const Row& row : rows) {

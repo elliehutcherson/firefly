@@ -37,7 +37,7 @@ class AlpacaTest : public ::testing::Test {
  protected:
   AlpacaProvider MakeProvider() {
     return AlpacaProvider({.key_id = "test-key", .secret_key = "test-secret"},
-                          &http_);
+                          http_);
   }
 
   FakeHttpClient http_;
@@ -188,7 +188,7 @@ TEST_F(AlpacaTest, BaseUrlOverrideIsUsed) {
   AlpacaProvider provider({.key_id = "test-key",
                            .secret_key = "test-secret",
                            .base_url = "http://localhost:9999"},
-                          &http_);
+                          http_);
 
   ASSERT_OK(provider.GetDailyBars("AAPL", absl::CivilDay(2026, 1, 2),
                                   absl::CivilDay(2026, 1, 31)));

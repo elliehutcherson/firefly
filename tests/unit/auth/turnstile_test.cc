@@ -18,7 +18,7 @@ using ::testing::Pair;
 
 TEST(TurnstileTest, EmptySecretSkipsVerificationEntirely) {
   FakeHttpClient http;
-  TurnstileVerifier verifier("", &http);
+  TurnstileVerifier verifier("", http);
 
   EXPECT_FALSE(verifier.enabled());
   EXPECT_OK(verifier.Verify("any-token", "203.0.113.7"));
@@ -28,7 +28,7 @@ TEST(TurnstileTest, EmptySecretSkipsVerificationEntirely) {
 TEST(TurnstileTest, PostsFormToSiteverify) {
   FakeHttpClient http;
   http.responses.push_back(HttpResponse{200, R"({"success": true})"});
-  TurnstileVerifier verifier("s3cret", &http);
+  TurnstileVerifier verifier("s3cret", http);
 
   EXPECT_OK(verifier.Verify("the-token", "203.0.113.7"));
   ASSERT_EQ(http.requests.size(), 1);
@@ -44,7 +44,7 @@ TEST(TurnstileTest, PostsFormToSiteverify) {
 TEST(TurnstileTest, OmitsRemoteIpWhenUnknown) {
   FakeHttpClient http;
   http.responses.push_back(HttpResponse{200, R"({"success": true})"});
-  TurnstileVerifier verifier("s3cret", &http);
+  TurnstileVerifier verifier("s3cret", http);
 
   EXPECT_OK(verifier.Verify("the-token", std::nullopt));
   EXPECT_THAT(http.requests[0].form,
@@ -56,7 +56,7 @@ TEST(TurnstileTest, RejectionIsPermissionDenied) {
   FakeHttpClient http;
   http.responses.push_back(HttpResponse{
       200, R"({"success": false, "error-codes": ["invalid-input-response"]})"});
-  TurnstileVerifier verifier("s3cret", &http);
+  TurnstileVerifier verifier("s3cret", http);
 
   EXPECT_THAT(verifier.Verify("bad-token", std::nullopt),
               StatusIs(absl::StatusCode::kPermissionDenied));
@@ -65,7 +65,7 @@ TEST(TurnstileTest, RejectionIsPermissionDenied) {
 TEST(TurnstileTest, HttpErrorIsUnavailable) {
   FakeHttpClient http;
   http.responses.push_back(HttpResponse{500, "oops"});
-  TurnstileVerifier verifier("s3cret", &http);
+  TurnstileVerifier verifier("s3cret", http);
 
   EXPECT_THAT(verifier.Verify("token", std::nullopt),
               StatusIs(absl::StatusCode::kUnavailable));
@@ -74,7 +74,7 @@ TEST(TurnstileTest, HttpErrorIsUnavailable) {
 TEST(TurnstileTest, JunkBodyIsUnavailable) {
   FakeHttpClient http;
   http.responses.push_back(HttpResponse{200, "not json"});
-  TurnstileVerifier verifier("s3cret", &http);
+  TurnstileVerifier verifier("s3cret", http);
 
   EXPECT_THAT(verifier.Verify("token", std::nullopt),
               StatusIs(absl::StatusCode::kUnavailable));
@@ -83,7 +83,7 @@ TEST(TurnstileTest, JunkBodyIsUnavailable) {
 TEST(TurnstileTest, TransportErrorPropagates) {
   FakeHttpClient http;
   http.responses.push_back(absl::DeadlineExceededError("timed out"));
-  TurnstileVerifier verifier("s3cret", &http);
+  TurnstileVerifier verifier("s3cret", http);
 
   EXPECT_THAT(verifier.Verify("token", std::nullopt),
               StatusIs(absl::StatusCode::kDeadlineExceeded));

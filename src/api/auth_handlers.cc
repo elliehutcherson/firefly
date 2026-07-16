@@ -91,8 +91,8 @@ absl::StatusOr<std::string> StartSession(
     const AuthDeps& deps, int64_t user_id,
     const std::optional<std::string>& client_ip) {
   const std::string token = GenerateSessionToken();
-  const absl::Time now = deps.clock->Now();
-  RETURN_IF_ERROR(deps.sessions->CreateSession(
+  const absl::Time now = deps.clock.Now();
+  RETURN_IF_ERROR(deps.sessions.CreateSession(
       Sha256Hex(token), user_id, now, now + deps.session_ttl, client_ip));
   return token;
 }
@@ -101,8 +101,8 @@ absl::StatusOr<std::string> StartSession(
     const AuthDeps& deps, Transaction& transaction, int64_t user_id,
     const std::optional<std::string>& client_ip) {
   const std::string token = GenerateSessionToken();
-  const absl::Time now = deps.clock->Now();
-  RETURN_IF_ERROR(deps.sessions->CreateSession(
+  const absl::Time now = deps.clock.Now();
+  RETURN_IF_ERROR(deps.sessions.CreateSession(
       transaction, Sha256Hex(token), user_id, now, now + deps.session_ttl,
       client_ip));
   return token;
@@ -116,15 +116,15 @@ absl::StatusOr<SessionRecord> RequireSession(const AuthDeps& deps,
     return absl::UnauthenticatedError("not signed in");
   }
   const std::string token_hash = Sha256Hex(cookie_token);
-  const absl::Time now = deps.clock->Now();
+  const absl::Time now = deps.clock.Now();
   ASSIGN_OR_RETURN(const std::optional<SessionRecord> session,
-                   deps.sessions->FindSession(token_hash, now));
+                   deps.sessions.FindSession(token_hash, now));
   if (!session.has_value()) {
     return absl::UnauthenticatedError("not signed in");
   }
   if (now - session->last_seen_at > kTouchInterval) {
     RETURN_IF_ERROR(
-        deps.sessions->TouchSession(token_hash, now, now + deps.session_ttl));
+        deps.sessions.TouchSession(token_hash, now, now + deps.session_ttl));
   }
   return *session;
 }
@@ -167,20 +167,20 @@ absl::StatusOr<AuthResult> Signup(const AuthDeps& deps,
                                   const std::optional<std::string>& client_ip) {
   ASSIGN_OR_RETURN(const Credentials credentials, ParseCredentials(body_json));
   RETURN_IF_ERROR(
-      deps.turnstile->Verify(credentials.turnstile_token, client_ip));
+      deps.turnstile.Verify(credentials.turnstile_token, client_ip));
   if (client_ip.has_value()) {
     ASSIGN_OR_RETURN(
         const int64_t recent,
-        deps.users->CountRecentSignups(
-            *client_ip, deps.clock->Now() - absl::Hours(24)));
+        deps.users.CountRecentSignups(
+            *client_ip, deps.clock.Now() - absl::Hours(24)));
     if (recent >= deps.signup_ip_daily_cap) {
       return absl::ResourceExhaustedError("too many signups from this address");
     }
   }
   ASSIGN_OR_RETURN(const std::string password_hash,
                    HashPassword(credentials.password));
-  ASSIGN_OR_RETURN(std::unique_ptr<Transaction> transaction, deps.db->Begin());
-  const absl::StatusOr<int64_t> user_id = deps.users->CreateUser(
+  ASSIGN_OR_RETURN(std::unique_ptr<Transaction> transaction, deps.db.Begin());
+  const absl::StatusOr<int64_t> user_id = deps.users.CreateUser(
       *transaction, credentials.username, password_hash, credentials.email,
       client_ip);
   if (absl::IsAlreadyExists(user_id.status())) {
@@ -200,9 +200,9 @@ absl::StatusOr<AuthResult> Login(const AuthDeps& deps,
                                  const std::optional<std::string>& client_ip) {
   ASSIGN_OR_RETURN(const Credentials credentials, ParseCredentials(body_json));
   RETURN_IF_ERROR(
-      deps.turnstile->Verify(credentials.turnstile_token, client_ip));
+      deps.turnstile.Verify(credentials.turnstile_token, client_ip));
   ASSIGN_OR_RETURN(const std::optional<UserRecord> user,
-                   deps.users->FindUserByUsername(credentials.username));
+                   deps.users.FindUserByUsername(credentials.username));
   // Uniform failure for unknown user and wrong password.
   if (!user.has_value() ||
       !VerifyPassword(user->password_hash, credentials.password)) {
@@ -219,7 +219,7 @@ absl::StatusOr<AuthResult> Logout(const AuthDeps& deps,
                                   const std::string& cookie_token) {
   if (!cookie_token.empty()) {
     RETURN_IF_ERROR(
-        deps.sessions->DeleteSession(Sha256Hex(cookie_token)).status());
+        deps.sessions.DeleteSession(Sha256Hex(cookie_token)).status());
   }
   return AuthResult{.body = {{"ok", true}}, .clear_session = true};
 }
@@ -229,7 +229,7 @@ absl::StatusOr<nlohmann::json> GetMeJson(const AuthDeps& deps,
   ASSIGN_OR_RETURN(const SessionRecord session,
                    RequireSession(deps, cookie_token));
   ASSIGN_OR_RETURN(const UserProfile profile,
-                   deps.users->GetUser(session.user_id));
+                   deps.users.GetUser(session.user_id));
   nlohmann::json body = {{"user_id", profile.id},
                          {"username", profile.username},
                          {"cash_cents", profile.cash_cents}};

@@ -20,7 +20,7 @@ class TurnstileVerifier {
  public:
   // `http` is borrowed and must outlive the verifier; unused when the
   // secret is empty.
-  TurnstileVerifier(std::string secret_key, HttpClient* http)
+  TurnstileVerifier(std::string secret_key, HttpClient& http)
       : secret_key_(std::move(secret_key)), http_(http) {}
 
   bool enabled() const { return !secret_key_.empty(); }
@@ -33,7 +33,7 @@ class TurnstileVerifier {
 
  private:
   const std::string secret_key_;
-  HttpClient* const http_;
+  HttpClient& http_;
 };
 
 }  // namespace firefly

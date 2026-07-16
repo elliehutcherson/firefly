@@ -55,8 +55,8 @@ TEST(DailyBarSyncTest, UpToDateSymbolCostsNoProviderCalls) {
   CannedUniverse(db, {"AAPL"}, Rows{Row{{"AAPL", "2026-07-13"}}});
   FakeMarketDataProvider provider;
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   absl::StatusOr<DailyBarSyncStats> stats =
       SyncDailyBars(instruments, candles, provider, clock,
@@ -76,8 +76,8 @@ TEST(DailyBarSyncTest, StaleSymbolFetchesFromDayAfterLatest) {
   provider.daily_bars_results.push_back(std::vector<Bar>{
       BarOn(absl::CivilDay(2026, 7, 10)), BarOn(absl::CivilDay(2026, 7, 13))});
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   absl::StatusOr<DailyBarSyncStats> stats =
       SyncDailyBars(instruments, candles, provider, clock,
@@ -103,8 +103,8 @@ TEST(DailyBarSyncTest, NewSymbolStartsAtBackfillStart) {
   provider.daily_bars_results.push_back(
       std::vector<Bar>{BarOn(absl::CivilDay(2026, 7, 13))});
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   absl::StatusOr<DailyBarSyncStats> stats =
       SyncDailyBars(instruments, candles, provider, clock,
@@ -121,8 +121,8 @@ TEST(DailyBarSyncTest, EmptyBarsIsFineAndWritesNothing) {
   FakeMarketDataProvider provider;
   provider.daily_bars_results.push_back(std::vector<Bar>{});
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   absl::StatusOr<DailyBarSyncStats> stats =
       SyncDailyBars(instruments, candles, provider, clock,
@@ -143,8 +143,8 @@ TEST(DailyBarSyncTest, OneFailingSymbolDoesNotStarveTheRest) {
   provider.daily_bars_results.push_back(
       std::vector<Bar>{BarOn(absl::CivilDay(2026, 7, 13))});
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   absl::StatusOr<DailyBarSyncStats> stats =
       SyncDailyBars(instruments, candles, provider, clock,
@@ -163,8 +163,8 @@ TEST(DailyBarSyncTest, AllSymbolsFailingIsAnError) {
   FakeMarketDataProvider provider;
   provider.daily_bars_results.push_back(absl::UnavailableError("alpaca down"));
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   EXPECT_THAT(SyncDailyBars(instruments, candles, provider, clock,
                             {.backfill_start = absl::CivilDay(2026, 7, 13)}),
@@ -179,8 +179,8 @@ TEST(DailyBarSyncTest, ExplicitSymbolsSkipTheUniverseQuery) {
   provider.daily_bars_results.push_back(
       std::vector<Bar>{BarOn(absl::CivilDay(2026, 7, 13))});
   FakeClock clock(TestNow());
-  InstrumentRepo instruments(&db);
-  CandleRepo candles(&db);
+  InstrumentRepo instruments(db);
+  CandleRepo candles(db);
 
   absl::StatusOr<DailyBarSyncStats> stats = SyncDailyBars(
       instruments, candles, provider, clock,

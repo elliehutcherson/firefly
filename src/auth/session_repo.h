@@ -21,7 +21,7 @@ namespace firefly {
 class SessionRepo : public SessionStore {
  public:
   // `db` is borrowed and must outlive the repo.
-  explicit SessionRepo(Db* db) : db_(db) {}
+  explicit SessionRepo(Db& db) : db_(db) {}
 
   absl::Status CreateSession(const std::string& token_sha256_hex,
                              int64_t user_id, absl::Time now,
@@ -51,7 +51,7 @@ class SessionRepo : public SessionStore {
   absl::StatusOr<int64_t> DeleteExpiredSessions(absl::Time now) override;
 
  private:
-  Db* const db_;
+  Db& db_;
 };
 
 }  // namespace firefly

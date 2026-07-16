@@ -20,7 +20,7 @@ namespace firefly {
 class CandleRepo : public CandleStore {
  public:
   // `db` is borrowed and must outlive the repo.
-  explicit CandleRepo(Db* db) : db_(db) {}
+  explicit CandleRepo(Db& db) : db_(db) {}
 
   // Stored candles over [start, end], both inclusive, oldest first.
   absl::StatusOr<std::vector<DailyCandle>> GetRange(const std::string& symbol,
@@ -38,7 +38,7 @@ class CandleRepo : public CandleStore {
       override;
 
  private:
-  Db* const db_;
+  Db& db_;
 };
 
 }  // namespace firefly

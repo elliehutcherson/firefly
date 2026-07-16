@@ -16,7 +16,7 @@ namespace firefly {
 class InstrumentRepo : public InstrumentStore {
  public:
   // `db` is borrowed and must outlive the repo.
-  explicit InstrumentRepo(Db* db) : db_(db) {}
+  explicit InstrumentRepo(Db& db) : db_(db) {}
 
   // All active symbols, sorted. The universe the sync job iterates.
   absl::StatusOr<std::vector<std::string>> ListActiveSymbols() override;
@@ -26,7 +26,7 @@ class InstrumentRepo : public InstrumentStore {
   absl::StatusOr<bool> Exists(const std::string& symbol) override;
 
  private:
-  Db* const db_;
+  Db& db_;
 };
 
 }  // namespace firefly

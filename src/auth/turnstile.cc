@@ -31,7 +31,7 @@ absl::Status TurnstileVerifier::Verify(
   if (remote_ip.has_value()) {
     request.form.emplace_back("remoteip", *remote_ip);
   }
-  ASSIGN_OR_RETURN(const HttpResponse response, http_->Post(request));
+  ASSIGN_OR_RETURN(const HttpResponse response, http_.Post(request));
   if (response.status_code != 200) {
     return absl::UnavailableError(
         absl::StrCat("turnstile siteverify returned ", response.status_code));

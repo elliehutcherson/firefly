@@ -35,15 +35,17 @@ constexpr char kIp[] = "203.0.113.7";
 // objects production uses; only Db/Http/Clock are faked.
 class AuthHandlersTest : public ::testing::Test {
  protected:
-  AuthDeps Deps() {
-    return {.db = &db_,
-            .users = &users_,
-            .sessions = &sessions_,
-            .turnstile = &turnstile_,
-            .clock = &clock_,
+  AuthDeps Deps(TurnstileVerifier& turnstile) {
+    return {.db = db_,
+            .users = users_,
+            .sessions = sessions_,
+            .turnstile = turnstile,
+            .clock = clock_,
             .session_ttl = absl::Hours(24 * 30),
             .signup_ip_daily_cap = 3};
   }
+
+  AuthDeps Deps() { return Deps(turnstile_); }
 
   // Signup runs: count recent signups (when ip present), insert user
   // RETURNING id, insert session.
@@ -54,10 +56,10 @@ class AuthHandlersTest : public ::testing::Test {
   }
 
   FakeDb db_;
-  UserRepo users_{&db_};
-  SessionRepo sessions_{&db_};
+  UserRepo users_{db_};
+  SessionRepo sessions_{db_};
   FakeHttpClient http_;
-  TurnstileVerifier turnstile_{"", &http_};  // Disabled by default.
+  TurnstileVerifier turnstile_{"", http_};  // Disabled by default.
   FakeClock clock_{absl::FromUnixSeconds(1786000000)};
 };
 
@@ -172,10 +174,9 @@ TEST_F(AuthHandlersTest, SignupValidationRejects) {
 }
 
 TEST_F(AuthHandlersTest, SignupTurnstileRejectionIs403) {
-  TurnstileVerifier enabled("s3cret", &http_);
+  TurnstileVerifier enabled("s3cret", http_);
   http_.responses.push_back(HttpResponse{200, R"({"success": false})"});
-  AuthDeps deps = Deps();
-  deps.turnstile = &enabled;
+  AuthDeps deps = Deps(enabled);
 
   EXPECT_THAT(
       Signup(deps,

@@ -23,7 +23,7 @@ TEST(InstrumentRepoTest, ListActiveSymbols) {
   FakeDb db;
   db.query_results.push_back(
       Rows{SymbolRow("AAPL"), SymbolRow("MSFT"), SymbolRow("SPY")});
-  InstrumentRepo repo(&db);
+  InstrumentRepo repo(db);
 
   absl::StatusOr<std::vector<std::string>> symbols = repo.ListActiveSymbols();
   ASSERT_OK(symbols);
@@ -35,7 +35,7 @@ TEST(InstrumentRepoTest, ListActiveSymbols) {
 TEST(InstrumentRepoTest, ListPropagatesDbError) {
   FakeDb db;
   db.query_results.push_back(absl::UnavailableError("db down"));
-  InstrumentRepo repo(&db);
+  InstrumentRepo repo(db);
 
   EXPECT_THAT(repo.ListActiveSymbols(),
               StatusIs(absl::StatusCode::kUnavailable));
@@ -44,7 +44,7 @@ TEST(InstrumentRepoTest, ListPropagatesDbError) {
 TEST(InstrumentRepoTest, NullSymbolIsInternalError) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{std::nullopt}}});
-  InstrumentRepo repo(&db);
+  InstrumentRepo repo(db);
 
   EXPECT_THAT(repo.ListActiveSymbols(),
               StatusIs(absl::StatusCode::kInternal));
@@ -54,7 +54,7 @@ TEST(InstrumentRepoTest, ExistsBindsSymbolAndMapsRows) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"1"}}});
   db.query_results.push_back(Rows{});
-  InstrumentRepo repo(&db);
+  InstrumentRepo repo(db);
 
   absl::StatusOr<bool> exists = repo.Exists("AAPL");
   ASSERT_OK(exists);

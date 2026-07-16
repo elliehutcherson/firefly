@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   const std::unique_ptr<firefly::HttpClient> http = firefly::CreateHttpClient();
   firefly::AlpacaProvider provider(
       {.key_id = config.alpaca_key_id, .secret_key = config.alpaca_secret_key},
-      http.get());
+      *http);
 
   const absl::StatusOr<firefly::Trade> trade = provider.GetLatestTrade(symbol);
   if (!trade.ok()) {

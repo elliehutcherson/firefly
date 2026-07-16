@@ -10,7 +10,7 @@
 namespace firefly {
 
 bool TokenBucketRateLimiter::Allow(const std::string& key) {
-  const absl::Time now = clock_->Now();
+  const absl::Time now = clock_.Now();
   absl::MutexLock lock(&mu_);
 
   auto it = buckets_.find(key);

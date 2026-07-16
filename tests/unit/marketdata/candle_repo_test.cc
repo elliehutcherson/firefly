@@ -31,7 +31,7 @@ TEST(CandleRepoTest, GetRangeParsesRowsAndBindsParams) {
                 "48210000"),
       CandleRow("2026-07-13", "190.5000", "192.0000", "190.0000", "191.7500",
                 "51000000")});
-  CandleRepo repo(&db);
+  CandleRepo repo(db);
 
   absl::StatusOr<std::vector<DailyCandle>> candles = repo.GetRange(
       "AAPL", absl::CivilDay(2026, 7, 1), absl::CivilDay(2026, 7, 14));
@@ -54,7 +54,7 @@ TEST(CandleRepoTest, GetRangeRejectsMalformedNumeric) {
   FakeDb db;
   db.query_results.push_back(Rows{CandleRow(
       "2026-07-10", "not-a-price", "1", "1", "1", "1")});
-  CandleRepo repo(&db);
+  CandleRepo repo(db);
 
   EXPECT_THAT(repo.GetRange("AAPL", absl::CivilDay(2026, 7, 1),
                             absl::CivilDay(2026, 7, 14)),
@@ -66,7 +66,7 @@ TEST(CandleRepoTest, GetRangeRejectsNullColumn) {
   Row row = CandleRow("2026-07-10", "1", "1", "1", "1", "1");
   row.columns[4] = std::nullopt;
   db.query_results.push_back(Rows{row});
-  CandleRepo repo(&db);
+  CandleRepo repo(db);
 
   EXPECT_THAT(repo.GetRange("AAPL", absl::CivilDay(2026, 7, 1),
                             absl::CivilDay(2026, 7, 14)),
@@ -76,7 +76,7 @@ TEST(CandleRepoTest, GetRangeRejectsNullColumn) {
 TEST(CandleRepoTest, UpsertCandlesBuildsArraysInOneStatement) {
   FakeDb db;
   db.execute_results.push_back(2);
-  CandleRepo repo(&db);
+  CandleRepo repo(db);
 
   EXPECT_OK(repo.UpsertCandles(
       "AAPL", {{.day = absl::CivilDay(2026, 7, 10),
@@ -104,7 +104,7 @@ TEST(CandleRepoTest, UpsertCandlesBuildsArraysInOneStatement) {
 
 TEST(CandleRepoTest, UpsertNothingIsANoOp) {
   FakeDb db;
-  CandleRepo repo(&db);
+  CandleRepo repo(db);
 
   EXPECT_OK(repo.UpsertCandles("AAPL", {}));
   EXPECT_TRUE(db.calls.empty());
@@ -114,7 +114,7 @@ TEST(CandleRepoTest, LatestDaysMapsRows) {
   FakeDb db;
   db.query_results.push_back(
       Rows{Row{{"AAPL", "2026-07-13"}}, Row{{"MSFT", "2026-07-10"}}});
-  CandleRepo repo(&db);
+  CandleRepo repo(db);
 
   absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>> latest =
       repo.LatestDays();

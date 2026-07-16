@@ -56,14 +56,14 @@ absl::StatusOr<V> CachedProvider::GetOrFetch(
   {
     absl::MutexLock lock(&cache.mu);
     const auto it = cache.entries.find(key);
-    if (it != cache.entries.end() && clock_->Now() < it->second.expires_at) {
+    if (it != cache.entries.end() && clock_.Now() < it->second.expires_at) {
       future = it->second.future;  // Fresh, or in flight: share it.
     } else {
       fetching = true;
       future = promise.get_future().share();
       // Reserve room when possible. An expired entry for this key is included
       // in the sweep; in-flight entries may temporarily exceed the target.
-      Trim(cache, clock_->Now(), max_entries > 0 ? max_entries - 1 : 0);
+      Trim(cache, clock_.Now(), max_entries > 0 ? max_entries - 1 : 0);
       cache.entries[key] = {future, absl::InfiniteFuture()};
     }
   }
@@ -77,8 +77,8 @@ absl::StatusOr<V> CachedProvider::GetOrFetch(
     absl::MutexLock lock(&cache.mu);
     // The entry is still ours: an in-flight entry is never replaced.
     if (result.ok()) {
-      cache.entries[key].expires_at = clock_->Now() + ttl;
-      Trim(cache, clock_->Now(), max_entries);
+      cache.entries[key].expires_at = clock_.Now() + ttl;
+      Trim(cache, clock_.Now(), max_entries);
     } else {
       // Waiters already hold the future; nobody after them sees the error.
       cache.entries.erase(key);
@@ -91,14 +91,14 @@ absl::StatusOr<Trade> CachedProvider::GetLatestTrade(
     const std::string& symbol) {
   return GetOrFetch<Trade>(trades_, symbol, options_.quote_ttl,
                            options_.max_quote_entries,
-                           [&] { return inner_->GetLatestTrade(symbol); });
+                           [&] { return inner_.GetLatestTrade(symbol); });
 }
 
 absl::StatusOr<std::vector<Bar>> CachedProvider::GetDailyBars(
     const std::string& symbol, absl::CivilDay start, absl::CivilDay end) {
   // Uncached by design: daily history lives in candles_daily, and the only
   // callers of this method are backfill/sync jobs.
-  return inner_->GetDailyBars(symbol, start, end);
+  return inner_.GetDailyBars(symbol, start, end);
 }
 
 absl::StatusOr<std::vector<Bar>> CachedProvider::GetMinuteBars(
@@ -109,7 +109,7 @@ absl::StatusOr<std::vector<Bar>> CachedProvider::GetMinuteBars(
   return GetOrFetch<std::vector<Bar>>(
       minute_bars_, key, options_.minute_bars_ttl,
       options_.max_minute_bar_entries,
-      [&] { return inner_->GetMinuteBars(symbol, start, end); });
+      [&] { return inner_.GetMinuteBars(symbol, start, end); });
 }
 
 }  // namespace firefly

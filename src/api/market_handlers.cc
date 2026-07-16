@@ -34,7 +34,7 @@ std::string FormatUtc(absl::Time time) {
 // curated universe.
 absl::Status RequireKnownSymbol(const MarketDeps& deps,
                                 const std::string& symbol) {
-  ASSIGN_OR_RETURN(const bool exists, deps.instruments->Exists(symbol));
+  ASSIGN_OR_RETURN(const bool exists, deps.instruments.Exists(symbol));
   if (!exists) {
     return absl::NotFoundError(absl::StrCat("unknown symbol: ", symbol));
   }
@@ -149,10 +149,10 @@ absl::StatusOr<nlohmann::json> GetDailyCandlesJson(
   ASSIGN_OR_RETURN(const std::string symbol, NormalizeSymbol(raw_symbol));
   RETURN_IF_ERROR(RequireKnownSymbol(deps, symbol));
   const absl::CivilDay today =
-      absl::ToCivilDay(deps.clock->Now(), NewYorkTimeZone());
+      absl::ToCivilDay(deps.clock.Now(), NewYorkTimeZone());
   ASSIGN_OR_RETURN(const absl::CivilDay start, RangeStart(range, today));
   ASSIGN_OR_RETURN(const std::vector<DailyCandle> candles,
-                   deps.candles->GetRange(symbol, start, today));
+                   deps.candles.GetRange(symbol, start, today));
   nlohmann::json bars = nlohmann::json::array();
   for (const DailyCandle& candle : candles) {
     bars.push_back(ToJson(candle));
@@ -167,7 +167,7 @@ absl::StatusOr<nlohmann::json> GetIntradayCandlesJson(
   RETURN_IF_ERROR(RequireKnownSymbol(deps, symbol));
   RETURN_IF_ERROR(RequireProvider(deps));
   const IntradayWindow window =
-      ComputeIntradayWindow(deps.clock->Now(), NewYorkTimeZone());
+      ComputeIntradayWindow(deps.clock.Now(), NewYorkTimeZone());
   ASSIGN_OR_RETURN(
       const std::vector<Bar> minute_bars,
       deps.provider->GetMinuteBars(symbol, window.start, window.end));

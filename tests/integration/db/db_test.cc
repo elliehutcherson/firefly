@@ -91,7 +91,7 @@ TEST_F(DbTest, CandleRepoRoundTripsThroughRealPostgres) {
   // NUMERIC(14,4) -> e4 read path against a real database. Uses 1970 dates
   // so it can never collide with backfilled market data; AAPL exists via the
   // seed migration (candles_daily has a foreign key on instruments).
-  CandleRepo repo(db_.get());
+  CandleRepo repo(*db_);
   const absl::CivilDay kDay1(1970, 1, 2);
   const absl::CivilDay kDay2(1970, 1, 5);
   ASSERT_OK(db_->Execute(

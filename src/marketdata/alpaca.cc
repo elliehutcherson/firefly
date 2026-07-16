@@ -166,7 +166,7 @@ absl::StatusOr<Bar> ParseBar(const json& bar_json) {
 
 }  // namespace
 
-AlpacaProvider::AlpacaProvider(AlpacaConfig config, HttpClient* http)
+AlpacaProvider::AlpacaProvider(AlpacaConfig config, HttpClient& http)
     : config_(std::move(config)), http_(http) {}
 
 absl::StatusOr<Trade> AlpacaProvider::GetLatestTrade(
@@ -175,7 +175,7 @@ absl::StatusOr<Trade> AlpacaProvider::GetLatestTrade(
     return absl::InvalidArgumentError(absl::StrCat("bad symbol: ", symbol));
   }
   ASSIGN_OR_RETURN(
-      json body, GetJson(*http_, config_,
+      json body, GetJson(http_, config_,
                          absl::StrCat("/v2/stocks/", symbol, "/trades/latest"),
                          {{"feed", "iex"}}));
   ASSIGN_OR_RETURN(const json* trade_json, GetField(body, "trade"));
@@ -216,7 +216,7 @@ absl::StatusOr<std::vector<Bar>> AlpacaProvider::FetchBars(
       query_params.emplace_back("page_token", page_token);
     }
     ASSIGN_OR_RETURN(json body,
-                     GetJson(*http_, config_, path, std::move(query_params)));
+                     GetJson(http_, config_, path, std::move(query_params)));
     // "bars" is null (not an empty array) when the range has no data.
     const auto bars_json = body.find("bars");
     if (bars_json != body.end() && bars_json->is_array()) {

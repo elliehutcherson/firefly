@@ -44,7 +44,7 @@ absl::Status SessionRepo::CreateSession(const std::string& token_sha256_hex,
                                         int64_t user_id, absl::Time now,
                                         absl::Time expires_at,
                                         const std::optional<std::string>& ip) {
-  return InsertSession(*db_, token_sha256_hex, user_id, now, expires_at, ip);
+  return InsertSession(db_, token_sha256_hex, user_id, now, expires_at, ip);
 }
 
 absl::Status SessionRepo::CreateSession(
@@ -61,7 +61,7 @@ absl::StatusOr<std::optional<SessionRecord>> SessionRepo::FindSession(
   // timestamptz text form.
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT user_id, extract(epoch FROM last_seen_at)::bigint "
+      db_.Query("SELECT user_id, extract(epoch FROM last_seen_at)::bigint "
                  "FROM sessions WHERE token_hash = $1::bytea "
                  "AND expires_at > $2::timestamptz",
                  {ByteaLiteral(token_sha256_hex), FormatTimestamp(now)}));
@@ -79,25 +79,25 @@ absl::StatusOr<std::optional<SessionRecord>> SessionRepo::FindSession(
 absl::Status SessionRepo::TouchSession(const std::string& token_sha256_hex,
                                        absl::Time now,
                                        absl::Time new_expires_at) {
-  return db_
-      ->Execute("UPDATE sessions SET last_seen_at = $2::timestamptz, "
-                "expires_at = $3::timestamptz WHERE token_hash = $1::bytea",
-                {ByteaLiteral(token_sha256_hex), FormatTimestamp(now),
-                 FormatTimestamp(new_expires_at)})
+  return db_.Execute("UPDATE sessions SET last_seen_at = $2::timestamptz, "
+                     "expires_at = $3::timestamptz WHERE token_hash = "
+                     "$1::bytea",
+                     {ByteaLiteral(token_sha256_hex), FormatTimestamp(now),
+                      FormatTimestamp(new_expires_at)})
       .status();
 }
 
 absl::StatusOr<bool> SessionRepo::DeleteSession(
     const std::string& token_sha256_hex) {
   ASSIGN_OR_RETURN(const int64_t deleted,
-                   db_->Execute("DELETE FROM sessions WHERE token_hash = "
+                   db_.Execute("DELETE FROM sessions WHERE token_hash = "
                                 "$1::bytea",
                                 {ByteaLiteral(token_sha256_hex)}));
   return deleted > 0;
 }
 
 absl::StatusOr<int64_t> SessionRepo::DeleteExpiredSessions(absl::Time now) {
-  return db_->Execute("DELETE FROM sessions WHERE expires_at < $1::timestamptz",
+  return db_.Execute("DELETE FROM sessions WHERE expires_at < $1::timestamptz",
                       {FormatTimestamp(now)});
 }
 

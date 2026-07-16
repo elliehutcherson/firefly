@@ -39,6 +39,8 @@ firefly_add_test(daily_bar_sync_test unit/jobs/daily_bar_sync_test.cc unit)
 firefly_add_test(job_runner_test unit/jobs/job_runner_test.cc unit)
 
 firefly_add_test(alpaca_test unit/marketdata/alpaca_test.cc unit)
+firefly_add_test(cached_instrument_store_test
+    unit/marketdata/cached_instrument_store_test.cc unit)
 firefly_add_test(cached_provider_test unit/marketdata/cached_provider_test.cc unit)
 firefly_add_test(candle_repo_test unit/marketdata/candle_repo_test.cc unit)
 firefly_add_test(instrument_repo_test unit/marketdata/instrument_repo_test.cc unit)

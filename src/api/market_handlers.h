@@ -25,10 +25,10 @@ namespace firefly {
 // credentials): quote/intraday return Unavailable, daily still serves from
 // Postgres.
 struct MarketDeps {
-  InstrumentStore* instruments = nullptr;
-  CandleStore* candles = nullptr;
+  InstrumentStore& instruments;
+  CandleStore& candles;
   MarketDataProvider* provider = nullptr;
-  const Clock* clock = nullptr;
+  const Clock& clock;
 };
 
 // Uppercases and validates: one A-Z, then up to nine of [A-Z.-] ("AAPL",

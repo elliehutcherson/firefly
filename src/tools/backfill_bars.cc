@@ -108,10 +108,10 @@ int main(int argc, char** argv) {
   const std::unique_ptr<firefly::HttpClient> http = firefly::CreateHttpClient();
   firefly::AlpacaProvider provider(
       {.key_id = config.alpaca_key_id, .secret_key = config.alpaca_secret_key},
-      http.get());
+      *http);
   const std::unique_ptr<firefly::Clock> clock = firefly::CreateSystemClock();
-  firefly::InstrumentRepo instruments(db->get());
-  firefly::CandleRepo candles(db->get());
+  firefly::InstrumentRepo instruments(**db);
+  firefly::CandleRepo candles(**db);
 
   return RunSync(instruments, candles, provider, *clock);
 }

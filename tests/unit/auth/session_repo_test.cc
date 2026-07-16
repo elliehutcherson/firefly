@@ -23,7 +23,7 @@ constexpr char kHash[] =
 TEST(SessionRepoTest, CreateSessionFramesByteaAndTimestamps) {
   FakeDb db;
   db.execute_results.push_back(1);
-  SessionRepo repo(&db);
+  SessionRepo repo(db);
 
   const absl::Time now = absl::FromUnixSeconds(1786000000);
   ASSERT_OK(repo.CreateSession(kHash, 42, now, now + absl::Hours(24 * 30),
@@ -41,7 +41,7 @@ TEST(SessionRepoTest, CreateSessionFramesByteaAndTimestamps) {
 TEST(SessionRepoTest, FindSessionParsesEpochAndChecksExpiry) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"42", "1786000000"}}});
-  SessionRepo repo(&db);
+  SessionRepo repo(db);
 
   absl::StatusOr<std::optional<SessionRecord>> session =
       repo.FindSession(kHash, absl::FromUnixSeconds(1786000500));
@@ -55,7 +55,7 @@ TEST(SessionRepoTest, FindSessionParsesEpochAndChecksExpiry) {
 TEST(SessionRepoTest, FindSessionMissingIsNullopt) {
   FakeDb db;
   db.query_results.push_back(Rows{});
-  SessionRepo repo(&db);
+  SessionRepo repo(db);
 
   absl::StatusOr<std::optional<SessionRecord>> session =
       repo.FindSession(kHash, absl::UnixEpoch());
@@ -66,7 +66,7 @@ TEST(SessionRepoTest, FindSessionMissingIsNullopt) {
 TEST(SessionRepoTest, TouchUpdatesBothTimestamps) {
   FakeDb db;
   db.execute_results.push_back(1);
-  SessionRepo repo(&db);
+  SessionRepo repo(db);
 
   const absl::Time now = absl::FromUnixSeconds(1786000000);
   ASSERT_OK(repo.TouchSession(kHash, now, now + absl::Hours(24 * 30)));
@@ -78,7 +78,7 @@ TEST(SessionRepoTest, DeleteSessionReportsWhetherARowExisted) {
   FakeDb db;
   db.execute_results.push_back(1);
   db.execute_results.push_back(0);
-  SessionRepo repo(&db);
+  SessionRepo repo(db);
 
   absl::StatusOr<bool> first = repo.DeleteSession(kHash);
   ASSERT_OK(first);
@@ -91,7 +91,7 @@ TEST(SessionRepoTest, DeleteSessionReportsWhetherARowExisted) {
 TEST(SessionRepoTest, DeleteExpiredReturnsCount) {
   FakeDb db;
   db.execute_results.push_back(3);
-  SessionRepo repo(&db);
+  SessionRepo repo(db);
 
   absl::StatusOr<int64_t> deleted =
       repo.DeleteExpiredSessions(absl::FromUnixSeconds(1786000000));

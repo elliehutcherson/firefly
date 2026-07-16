@@ -35,18 +35,18 @@ absl::Time TestNow() {
 class MarketHandlersTest : public ::testing::Test {
  protected:
   MarketDeps Deps() {
-    return {.instruments = &instruments_,
-            .candles = &candles_,
+    return {.instruments = instruments_,
+            .candles = candles_,
             .provider = &provider_,
-            .clock = &clock_};
+            .clock = clock_};
   }
 
   void SymbolExists() { db_.query_results.push_back(Rows{Row{{"1"}}}); }
   void SymbolMissing() { db_.query_results.push_back(Rows{}); }
 
   FakeDb db_;
-  InstrumentRepo instruments_{&db_};
-  CandleRepo candles_{&db_};
+  InstrumentRepo instruments_{db_};
+  CandleRepo candles_{db_};
   FakeMarketDataProvider provider_;
   FakeClock clock_{TestNow()};
 };

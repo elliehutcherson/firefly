@@ -29,7 +29,7 @@ class TokenBucketRateLimiter {
   };
 
   // `clock` is borrowed and must outlive the limiter.
-  TokenBucketRateLimiter(const Clock* clock, Options options)
+  TokenBucketRateLimiter(const Clock& clock, Options options)
       : clock_(clock), options_(options) {}
 
   // Consumes one token from `key`'s bucket; false = rate limited.
@@ -41,7 +41,7 @@ class TokenBucketRateLimiter {
     absl::Time last_refill;
   };
 
-  const Clock* const clock_;
+  const Clock& clock_;
   const Options options_;
 
   absl::Mutex mu_;

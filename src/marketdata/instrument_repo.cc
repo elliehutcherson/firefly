@@ -14,7 +14,7 @@ namespace firefly {
 absl::StatusOr<std::vector<std::string>> InstrumentRepo::ListActiveSymbols() {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT symbol FROM instruments WHERE is_active "
+      db_.Query("SELECT symbol FROM instruments WHERE is_active "
                  "ORDER BY symbol"));
   std::vector<std::string> symbols;
   symbols.reserve(rows.size());
@@ -30,7 +30,7 @@ absl::StatusOr<std::vector<std::string>> InstrumentRepo::ListActiveSymbols() {
 absl::StatusOr<bool> InstrumentRepo::Exists(const std::string& symbol) {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT 1 FROM instruments WHERE symbol = $1 AND is_active",
+      db_.Query("SELECT 1 FROM instruments WHERE symbol = $1 AND is_active",
                  {symbol}));
   return !rows.empty();
 }

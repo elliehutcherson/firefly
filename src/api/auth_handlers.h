@@ -21,11 +21,11 @@ namespace firefly {
 
 // All borrowed, all non-owning.
 struct AuthDeps {
-  Db* db = nullptr;
-  UserStore* users = nullptr;
-  SessionStore* sessions = nullptr;
-  TurnstileVerifier* turnstile = nullptr;
-  const Clock* clock = nullptr;
+  Db& db;
+  UserStore& users;
+  SessionStore& sessions;
+  TurnstileVerifier& turnstile;
+  const Clock& clock;
   absl::Duration session_ttl = absl::Hours(24 * 30);
   int signup_ip_daily_cap = 3;
 };

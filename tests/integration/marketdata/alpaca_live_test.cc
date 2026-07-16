@@ -37,7 +37,7 @@ class AlpacaLiveTest : public ::testing::Test {
     provider_ = std::make_unique<AlpacaProvider>(
         AlpacaConfig{.key_id = config.alpaca_key_id,
                      .secret_key = config.alpaca_secret_key},
-        http_.get());
+        *http_);
   }
 
   std::unique_ptr<HttpClient> http_;

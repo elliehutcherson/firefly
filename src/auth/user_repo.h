@@ -19,7 +19,7 @@ namespace firefly {
 class UserRepo : public UserStore {
  public:
   // `db` is borrowed and must outlive the repo.
-  explicit UserRepo(Db* db) : db_(db) {}
+  explicit UserRepo(Db& db) : db_(db) {}
 
   // Inserts and returns the new id. `signup_ip` nullopt binds NULL.
   absl::StatusOr<int64_t> CreateUser(const std::string& username,
@@ -46,7 +46,7 @@ class UserRepo : public UserStore {
   absl::StatusOr<UserProfile> GetUser(int64_t user_id) override;
 
  private:
-  Db* const db_;
+  Db& db_;
 };
 
 }  // namespace firefly

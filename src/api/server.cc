@@ -202,7 +202,7 @@ void Server::Run() {
   app.get_middleware<RateLimitMiddleware>().client_ip_header =
       config_.client_ip_header;
 
-  CROW_ROUTE(app, "/healthz")([this] { return Healthz(*deps_.db); });
+  CROW_ROUTE(app, "/healthz")([this] { return Healthz(deps_.db); });
   CROW_ROUTE(app, "/api/v1/ping")([] { return Ping(); });
 
   const absl::Duration session_ttl = deps_.auth.session_ttl;

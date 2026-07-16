@@ -88,6 +88,10 @@ Names should be descriptive; length proportional to scope.
   reaching the end of a function (early returns make that a bug).
 - `std::unique_ptr` expresses ownership; a raw pointer or reference is always
   a non-owning borrow. No manual `new`/`delete`.
+- Use a reference for a required borrowed dependency that must outlive its
+  consumer. Use a raw pointer only when `nullptr` has a documented meaning or
+  an external API requires one; do not encode required dependencies as
+  nullable state.
 - Locks are held via `std::lock_guard` / `std::scoped_lock`; never manual
   `lock()`/`unlock()` pairs.
 

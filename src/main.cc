@@ -18,6 +18,7 @@
 #include "src/jobs/daily_bar_sync.h"
 #include "src/jobs/job_runner.h"
 #include "src/marketdata/alpaca.h"
+#include "src/marketdata/cached_instrument_store.h"
 #include "src/marketdata/cached_provider.h"
 #include "src/marketdata/candle_repo.h"
 #include "src/marketdata/instrument_repo.h"
@@ -58,16 +59,28 @@ int main() {
   // runners (destroyed first) may use everything above them.
   const std::unique_ptr<firefly::Clock> clock = firefly::CreateSystemClock();
   const std::unique_ptr<firefly::HttpClient> http = firefly::CreateHttpClient();
-  firefly::InstrumentRepo instruments(db->get());
-  firefly::CandleRepo candles(db->get());
-  firefly::UserRepo users(db->get());
-  firefly::SessionRepo sessions(db->get());
+  firefly::InstrumentRepo instrument_repo(**db);
+  firefly::CachedInstrumentStore instruments(instrument_repo);
+  if (const absl::Status status = instruments.Refresh(); !status.ok()) {
+    LOG(ERROR) << "failed to load active instrument universe: " << status;
+    return 1;
+  }
+  firefly::CandleRepo candles(**db);
+  firefly::UserRepo users(**db);
+  firefly::SessionRepo sessions(**db);
 
-  firefly::TurnstileVerifier turnstile(config.turnstile_secret_key, http.get());
+  firefly::TurnstileVerifier turnstile(config.turnstile_secret_key, *http);
   if (!turnstile.enabled()) {
     LOG(WARNING) << "TURNSTILE_SECRET_KEY not set; signup/login skip human "
                     "verification";
   }
+  firefly::JobRunner instrument_refresh(
+      "instrument_refresh", absl::Hours(1), [&] {
+        if (const absl::Status status = instruments.Refresh(); !status.ok()) {
+          LOG(ERROR) << "instrument refresh: " << status;
+        }
+      });
+  instrument_refresh.Start();
   firefly::JobRunner session_purge("session_purge", absl::Hours(1), [&] {
     const absl::StatusOr<int64_t> deleted =
         sessions.DeleteExpiredSessions(clock->Now());
@@ -86,11 +99,11 @@ int main() {
     alpaca = std::make_unique<firefly::AlpacaProvider>(
         firefly::AlpacaConfig{.key_id = config.alpaca_key_id,
                               .secret_key = config.alpaca_secret_key},
-        http.get());
+        *http);
     // Request-time callers go through the cache; the sync job's daily bars
     // pass through it unchanged.
     provider = std::make_unique<firefly::CachedProvider>(
-        alpaca.get(), clock.get(), firefly::CacheOptions{});
+        *alpaca, *clock, firefly::CacheOptions{});
     bar_sync = std::make_unique<firefly::JobRunner>(
         "daily_bar_sync", absl::Hours(1), [&] {
           firefly::DailyBarSyncOptions options;
@@ -119,16 +132,16 @@ int main() {
             << config.port;
   firefly::Server server(
       config,
-      {.db = db->get(),
-       .market = {.instruments = &instruments,
-                  .candles = &candles,
+      {.db = **db,
+       .market = {.instruments = instruments,
+                  .candles = candles,
                   .provider = provider.get(),
-                  .clock = clock.get()},
-       .auth = {.db = db->get(),
-                .users = &users,
-                .sessions = &sessions,
-                .turnstile = &turnstile,
-                .clock = clock.get(),
+                  .clock = *clock},
+       .auth = {.db = **db,
+                .users = users,
+                .sessions = sessions,
+                .turnstile = turnstile,
+                .clock = *clock,
                 .session_ttl = absl::Hours(24 * config.session_ttl_days),
                 .signup_ip_daily_cap = config.signup_ip_daily_cap}});
   server.Run();

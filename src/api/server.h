@@ -20,7 +20,7 @@ HealthReport CheckHealth(Db& db);
 
 // Everything the routes need; all borrowed, must outlive the server.
 struct ServerDeps {
-  Db* db = nullptr;
+  Db& db;
   MarketDeps market;
   AuthDeps auth;
 };

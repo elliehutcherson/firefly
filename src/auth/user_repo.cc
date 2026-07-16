@@ -41,7 +41,7 @@ absl::StatusOr<int64_t> UserRepo::CreateUser(
     const std::string& username, const std::string& password_hash,
     const std::optional<std::string>& email,
     const std::optional<std::string>& signup_ip) {
-  return InsertUser(*db_, username, password_hash, email, signup_ip);
+  return InsertUser(db_, username, password_hash, email, signup_ip);
 }
 
 absl::StatusOr<int64_t> UserRepo::CreateUser(
@@ -55,7 +55,7 @@ absl::StatusOr<std::optional<UserRecord>> UserRepo::FindUserByUsername(
     const std::string& username) {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT id, username, password_hash FROM users "
+      db_.Query("SELECT id, username, password_hash FROM users "
                  "WHERE lower(username) = lower($1)",
                  {username}));
   if (rows.empty()) {
@@ -75,7 +75,7 @@ absl::StatusOr<int64_t> UserRepo::CountRecentSignups(const std::string& ip,
                                                      absl::Time since) {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT count(*) FROM users WHERE signup_ip = $1::inet "
+      db_.Query("SELECT count(*) FROM users WHERE signup_ip = $1::inet "
                  "AND created_at > $2::timestamptz",
                  {ip, FormatTimestamp(since)}));
   if (rows.empty()) {
@@ -87,7 +87,7 @@ absl::StatusOr<int64_t> UserRepo::CountRecentSignups(const std::string& ip,
 absl::StatusOr<UserProfile> UserRepo::GetUser(int64_t user_id) {
   ASSIGN_OR_RETURN(
       const Rows rows,
-      db_->Query("SELECT id, username, email, cash_cents FROM users "
+      db_.Query("SELECT id, username, email, cash_cents FROM users "
                  "WHERE id = $1",
                  {absl::StrCat(user_id)}));
   if (rows.empty()) {

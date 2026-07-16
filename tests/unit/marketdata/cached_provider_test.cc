@@ -35,7 +35,7 @@ TEST(CachedProviderTest, SecondLookupWithinTtlHitsTheCache) {
   FakeMarketDataProvider inner;
   inner.latest_trade_results.push_back(TradeAt(1899550));
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   absl::StatusOr<Trade> first = provider.GetLatestTrade("AAPL");
   ASSERT_OK(first);
@@ -51,7 +51,7 @@ TEST(CachedProviderTest, ExpiredEntryRefetches) {
   inner.latest_trade_results.push_back(TradeAt(1899550));
   inner.latest_trade_results.push_back(TradeAt(1900000));
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   ASSERT_OK(provider.GetLatestTrade("AAPL"));
   clock.Advance(absl::Seconds(31));
@@ -66,7 +66,7 @@ TEST(CachedProviderTest, SymbolsAreIndependentKeys) {
   inner.latest_trade_results.push_back(TradeAt(1));
   inner.latest_trade_results.push_back(TradeAt(2));
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   ASSERT_OK(provider.GetLatestTrade("AAPL"));
   ASSERT_OK(provider.GetLatestTrade("MSFT"));
@@ -82,7 +82,7 @@ TEST(CachedProviderTest, QuoteCacheEvictsEntryNearestExpirationAtLimit) {
   FakeClock clock(TestNow());
   CacheOptions options = kOptions;
   options.max_quote_entries = 2;
-  CachedProvider provider(&inner, &clock, options);
+  CachedProvider provider(inner, clock, options);
 
   ASSERT_OK(provider.GetLatestTrade("AAPL"));
   clock.Advance(absl::Seconds(1));
@@ -103,7 +103,7 @@ TEST(CachedProviderTest, ErrorsAreDeliveredButNeverCached) {
   inner.latest_trade_results.push_back(absl::UnavailableError("alpaca 500"));
   inner.latest_trade_results.push_back(TradeAt(1899550));
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   EXPECT_THAT(provider.GetLatestTrade("AAPL"),
               StatusIs(absl::StatusCode::kUnavailable));
@@ -119,7 +119,7 @@ TEST(CachedProviderTest, DailyBarsPassThroughUncached) {
   inner.daily_bars_results.push_back(std::vector<Bar>{});
   inner.daily_bars_results.push_back(std::vector<Bar>{});
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   const absl::CivilDay start(2026, 7, 1);
   const absl::CivilDay end(2026, 7, 13);
@@ -133,7 +133,7 @@ TEST(CachedProviderTest, MinuteBarsCacheKeyIncludesRange) {
   inner.minute_bars_results.push_back(std::vector<Bar>{});
   inner.minute_bars_results.push_back(std::vector<Bar>{});
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   const absl::Time start = TestNow() - absl::Hours(2);
   ASSERT_OK(provider.GetMinuteBars("AAPL", start, TestNow() - absl::Minutes(16)));
@@ -150,7 +150,7 @@ TEST(CachedProviderTest, TradeAndMinuteBarCachesAreIndependent) {
   inner.latest_trade_results.push_back(TradeAt(1));
   inner.minute_bars_results.push_back(std::vector<Bar>{});
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   ASSERT_OK(provider.GetLatestTrade("AAPL"));
   ASSERT_OK(provider.GetMinuteBars("AAPL", TestNow() - absl::Hours(1),
@@ -190,7 +190,7 @@ class BlockingProvider : public MarketDataProvider {
 TEST(CachedProviderTest, ConcurrentMissesShareOneUpstreamCall) {
   BlockingProvider inner;
   FakeClock clock(TestNow());
-  CachedProvider provider(&inner, &clock, kOptions);
+  CachedProvider provider(inner, clock, kOptions);
 
   absl::StatusOr<Trade> results[2];
   std::thread first([&] { results[0] = provider.GetLatestTrade("AAPL"); });
@@ -215,7 +215,7 @@ TEST(CachedProviderTest, ZeroCapacityStillCoalescesInflightRequests) {
   FakeClock clock(TestNow());
   CacheOptions options = kOptions;
   options.max_quote_entries = 0;
-  CachedProvider provider(&inner, &clock, options);
+  CachedProvider provider(inner, clock, options);
 
   absl::StatusOr<Trade> results[2];
   std::thread first([&] { results[0] = provider.GetLatestTrade("AAPL"); });
