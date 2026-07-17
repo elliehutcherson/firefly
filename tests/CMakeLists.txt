@@ -46,6 +46,8 @@ firefly_add_test(cached_provider_test unit/marketdata/cached_provider_test.cc un
 firefly_add_test(candle_repo_test unit/marketdata/candle_repo_test.cc unit)
 firefly_add_test(instrument_repo_test unit/marketdata/instrument_repo_test.cc unit)
 
+firefly_add_test(market_calendar_test unit/trading/market_calendar_test.cc unit)
+
 # Real Postgres; self-skips when the configured database is unreachable.
 firefly_add_test(db_test integration/db/db_test.cc integration)
 

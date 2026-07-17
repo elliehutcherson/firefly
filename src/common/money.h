@@ -33,6 +33,14 @@ std::string PriceE4ToString(int64_t price_e4);
 // The inverse of PriceE4ToString; how prices come back from Db::Query.
 absl::StatusOr<int64_t> PriceE4FromString(absl::string_view text);
 
+// Cost in cents of `quantity` shares at `price_e4`, rounded in the house's
+// favor: debits (buy, cover) round sub-cent amounts up, credits (sell, short)
+// round them down. The asymmetry guarantees a same-price round trip can never
+// mint cash. InvalidArgument when price or quantity is not positive or the
+// product overflows int64.
+absl::StatusOr<int64_t> DebitCents(int64_t price_e4, int64_t quantity);
+absl::StatusOr<int64_t> CreditCents(int64_t price_e4, int64_t quantity);
+
 }  // namespace firefly
 
 #endif  // FIREFLY_COMMON_MONEY_H_
