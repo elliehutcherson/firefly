@@ -23,7 +23,8 @@ add_library(firefly_lib
     marketdata/cached_provider.cc
     marketdata/candle_repo.cc
     marketdata/instrument_repo.cc
-    trading/market_calendar.cc)
+    trading/market_calendar.cc
+    trading/order_math.cc)
 target_include_directories(firefly_lib PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(firefly_lib PUBLIC
     absl::flat_hash_map
