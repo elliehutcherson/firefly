@@ -18,6 +18,11 @@ int HttpStatusFromCode(absl::StatusCode code) {
       return 404;
     case absl::StatusCode::kAlreadyExists:
       return 409;
+    // State rejections (crossing zero, insufficient cash/margin, market
+    // closed): the request was well-formed but the account/world state
+    // refuses it.
+    case absl::StatusCode::kFailedPrecondition:
+      return 422;
     case absl::StatusCode::kResourceExhausted:
       return 429;
     case absl::StatusCode::kAborted:

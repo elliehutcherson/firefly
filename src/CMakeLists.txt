@@ -4,6 +4,7 @@ add_library(firefly_lib
     api/rate_limiter.cc
     api/server.cc
     api/status_mapping.cc
+    api/trading_handlers.cc
     auth/crypto.cc
     auth/session_auth.cc
     auth/session_repo.cc

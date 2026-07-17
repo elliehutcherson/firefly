@@ -3,6 +3,7 @@
 
 #include "src/api/auth_handlers.h"
 #include "src/api/market_handlers.h"
+#include "src/api/trading_handlers.h"
 #include "src/common/config.h"
 #include "src/db/db.h"
 
@@ -23,6 +24,7 @@ struct ServerDeps {
   Db& db;
   MarketDeps market;
   AuthDeps auth;
+  TradingDeps trading;
 };
 
 class Server {

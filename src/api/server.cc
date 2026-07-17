@@ -17,6 +17,7 @@
 #include "src/api/market_handlers.h"
 #include "src/api/rate_limiter.h"
 #include "src/api/status_mapping.h"
+#include "src/api/trading_handlers.h"
 
 namespace firefly {
 namespace {
@@ -234,6 +235,21 @@ void Server::Run() {
   ([this, &app](const crow::request& req) {
     return NoStoreResponse(GetMeJson(
         deps_.auth,
+        app.get_context<crow::CookieParser>(req).get_cookie(kSessionCookie)));
+  });
+
+  CROW_ROUTE(app, "/api/v1/orders")
+      .methods(crow::HTTPMethod::Post)([this, &app](const crow::request& req) {
+        return NoStoreResponse(PlaceOrderJson(
+            deps_.trading,
+            app.get_context<crow::CookieParser>(req).get_cookie(
+                kSessionCookie),
+            req.body));
+      });
+  CROW_ROUTE(app, "/api/v1/portfolio")
+  ([this, &app](const crow::request& req) {
+    return NoStoreResponse(GetPortfolioJson(
+        deps_.trading,
         app.get_context<crow::CookieParser>(req).get_cookie(kSessionCookie)));
   });
 

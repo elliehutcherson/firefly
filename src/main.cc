@@ -22,6 +22,7 @@
 #include "src/marketdata/cached_provider.h"
 #include "src/marketdata/candle_repo.h"
 #include "src/marketdata/instrument_repo.h"
+#include "src/trading/trading_repo.h"
 
 namespace {
 
@@ -68,6 +69,7 @@ int main() {
   firefly::CandleRepo candles(**db);
   firefly::UserRepo users(**db);
   firefly::SessionRepo sessions(**db);
+  firefly::TradingRepo trading(**db);
 
   firefly::TurnstileVerifier turnstile(config.turnstile_secret_key, *http);
   if (!turnstile.enabled()) {
@@ -128,8 +130,15 @@ int main() {
                     "market data and the bar sync job are disabled";
   }
 
+  if (config.allow_closed_market_trading) {
+    LOG(WARNING) << "FIREFLY_ALLOW_CLOSED_MARKET_TRADING is set; orders "
+                    "execute outside market hours (dev only)";
+  }
+
   LOG(INFO) << "firefly listening on " << config.bind_address << ":"
             << config.port;
+  const absl::Duration session_ttl =
+      absl::Hours(24 * config.session_ttl_days);
   firefly::Server server(
       config,
       {.db = **db,
@@ -142,8 +151,17 @@ int main() {
                 .sessions = sessions,
                 .turnstile = turnstile,
                 .clock = *clock,
-                .session_ttl = absl::Hours(24 * config.session_ttl_days),
-                .signup_ip_daily_cap = config.signup_ip_daily_cap}});
+                .session_ttl = session_ttl,
+                .signup_ip_daily_cap = config.signup_ip_daily_cap},
+       .trading = {.trading = trading,
+                   .instruments = instruments,
+                   .provider = provider.get(),
+                   .session_auth = {.sessions = sessions,
+                                    .clock = *clock,
+                                    .session_ttl = session_ttl},
+                   .clock = *clock,
+                   .allow_closed_market =
+                       config.allow_closed_market_trading}});
   server.Run();
   return 0;
 }

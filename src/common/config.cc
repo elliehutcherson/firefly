@@ -3,6 +3,7 @@
 #include <cstdlib>
 
 #include "absl/strings/numbers.h"
+#include "absl/strings/string_view.h"
 
 namespace firefly {
 namespace {
@@ -57,6 +58,10 @@ Config Config::FromEnv() {
   ReadPositiveInt("FIREFLY_SIGNUP_IP_DAILY_CAP", &config.signup_ip_daily_cap);
   ReadPositiveInt("FIREFLY_AUTH_RATE_PER_MIN", &config.auth_rate_per_min);
   ReadPositiveInt("FIREFLY_AUTH_BURST", &config.auth_burst);
+  if (const char* allow = std::getenv("FIREFLY_ALLOW_CLOSED_MARKET_TRADING")) {
+    const absl::string_view value(allow);
+    config.allow_closed_market_trading = value == "1" || value == "true";
+  }
   return config;
 }
 

@@ -43,6 +43,11 @@ struct Config {
   int signup_ip_daily_cap = 3;     // FIREFLY_SIGNUP_IP_DAILY_CAP
   int auth_rate_per_min = 10;      // FIREFLY_AUTH_RATE_PER_MIN
   int auth_burst = 10;             // FIREFLY_AUTH_BURST
+  // FIREFLY_ALLOW_CLOSED_MARKET_TRADING ("1"/"true") — dev-only bypass of
+  // the market-hours check; without it local dev outside 9:30-16:00 ET
+  // cannot trade at all. Orders execute at the last cached quote. Never
+  // enable in production (and it is absent from docker-compose.yml).
+  bool allow_closed_market_trading = false;
 };
 
 }  // namespace firefly

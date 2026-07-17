@@ -24,6 +24,7 @@ firefly_add_test(market_handlers_test unit/api/market_handlers_test.cc unit)
 firefly_add_test(rate_limiter_test unit/api/rate_limiter_test.cc unit)
 firefly_add_test(server_test unit/api/server_test.cc unit)
 firefly_add_test(status_mapping_test unit/api/status_mapping_test.cc unit)
+firefly_add_test(trading_handlers_test unit/api/trading_handlers_test.cc unit)
 
 firefly_add_test(crypto_test unit/auth/crypto_test.cc unit)
 firefly_add_test(session_auth_test unit/auth/session_auth_test.cc unit)

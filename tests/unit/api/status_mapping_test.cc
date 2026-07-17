@@ -12,6 +12,7 @@ TEST(HttpStatusFromCodeTest, MapsCodes) {
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kPermissionDenied), 403);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kNotFound), 404);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kAlreadyExists), 409);
+  EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kFailedPrecondition), 422);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kResourceExhausted), 429);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kAborted), 503);
   EXPECT_EQ(HttpStatusFromCode(absl::StatusCode::kUnavailable), 503);
@@ -36,6 +37,9 @@ TEST(PublicErrorMessageTest, PreservesDomainErrors) {
             "unknown symbol: NOPE");
   EXPECT_EQ(PublicErrorMessage(absl::InvalidArgumentError("invalid symbol")),
             "invalid symbol");
+  EXPECT_EQ(
+      PublicErrorMessage(absl::FailedPreconditionError("insufficient cash")),
+      "insufficient cash");
 }
 
 }  // namespace
