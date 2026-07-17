@@ -38,13 +38,6 @@ absl::StatusOr<int64_t> InsertUser(
 }  // namespace
 
 absl::StatusOr<int64_t> UserRepo::CreateUser(
-    const std::string& username, const std::string& password_hash,
-    const std::optional<std::string>& email,
-    const std::optional<std::string>& signup_ip) {
-  return InsertUser(db_, username, password_hash, email, signup_ip);
-}
-
-absl::StatusOr<int64_t> UserRepo::CreateUser(
     Transaction& transaction, const std::string& username,
     const std::string& password_hash, const std::optional<std::string>& email,
     const std::optional<std::string>& signup_ip) {

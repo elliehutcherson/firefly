@@ -11,9 +11,9 @@
 #include "absl/synchronization/notification.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/common/symbol.h"
 #include "src/marketdata/instrument_store.h"
 #include "tests/support/status_matchers.h"
+#include "tests/support/symbol.h"
 
 namespace firefly {
 namespace {
@@ -21,9 +21,6 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
-
-// Parse-or-die for test literals; validity is Symbol's own tested contract.
-Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 class FakeInstrumentStore : public InstrumentStore {
  public:

@@ -21,14 +21,8 @@ class UserRepo : public UserStore {
   // `db` is borrowed and must outlive the repo.
   explicit UserRepo(Db& db) : db_(db) {}
 
-  // Inserts and returns the new id. `signup_ip` nullopt binds NULL.
-  absl::StatusOr<int64_t> CreateUser(const std::string& username,
-                                     const std::string& password_hash,
-                                     const std::optional<std::string>& email,
-                                     const std::optional<std::string>& signup_ip);
-
-  // Transactional form used when user creation is one part of a larger
-  // invariant, such as signup's user-plus-session write.
+  // Inserts and returns the new id. User creation is one part of signup's
+  // user-plus-session invariant, so it always uses the caller's transaction.
   absl::StatusOr<int64_t> CreateUser(
       Transaction& transaction, const std::string& username,
       const std::string& password_hash,

@@ -1,6 +1,7 @@
 #ifndef FIREFLY_COMMON_SYMBOL_H_
 #define FIREFLY_COMMON_SYMBOL_H_
 
+#include <compare>
 #include <cstddef>
 #include <ostream>
 #include <string>
@@ -30,13 +31,7 @@ class Symbol {
   operator absl::string_view() const { return value_; }
   const std::string& str() const { return value_; }
 
-  friend bool operator==(const Symbol& a, const Symbol& b) {
-    return a.value_ == b.value_;
-  }
-  friend bool operator!=(const Symbol& a, const Symbol& b) { return !(a == b); }
-  friend bool operator<(const Symbol& a, const Symbol& b) {
-    return a.value_ < b.value_;
-  }
+  friend auto operator<=>(const Symbol&, const Symbol&) = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const Symbol& symbol) {

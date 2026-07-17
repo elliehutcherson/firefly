@@ -9,8 +9,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "tests/fakes/db/fake_db.h"
-#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
+#include "tests/support/symbol.h"
 
 namespace firefly {
 namespace {
@@ -18,9 +18,6 @@ namespace {
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
-
-// Parse-or-die for test literals; validity is Symbol's own tested contract.
-Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 Row CandleRow(const std::string& day, const std::string& open,
               const std::string& high, const std::string& low,

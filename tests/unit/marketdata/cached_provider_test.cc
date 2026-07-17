@@ -16,16 +16,13 @@
 #include "src/marketdata/provider.h"
 #include "tests/fakes/common/fake_clock.h"
 #include "tests/fakes/marketdata/fake_market_data_provider.h"
-#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
+#include "tests/support/symbol.h"
 
 namespace firefly {
 namespace {
 
 using ::absl_testing::StatusIs;
-
-// Parse-or-die for test literals; validity is Symbol's own tested contract.
-Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 constexpr CacheOptions kOptions;  // 30s quotes, 90s minute bars.
 

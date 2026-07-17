@@ -1,5 +1,6 @@
 #include "src/auth/user_repo.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -22,9 +23,12 @@ TEST(UserRepoTest, CreateUserBindsAllParamsAndReturnsId) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"42"}}});
   UserRepo repo(db);
+  absl::StatusOr<std::unique_ptr<Transaction>> transaction = db.Begin();
+  ASSERT_OK(transaction);
 
-  absl::StatusOr<int64_t> id = repo.CreateUser(
-      "ellie", "$argon2id$fake", "e@example.com", "203.0.113.7");
+  absl::StatusOr<int64_t> id =
+      repo.CreateUser(**transaction, "ellie", "$argon2id$fake",
+                      "e@example.com", "203.0.113.7");
   ASSERT_OK(id);
   EXPECT_EQ(*id, 42);
   ASSERT_EQ(db.calls.size(), 1);
@@ -39,8 +43,11 @@ TEST(UserRepoTest, CreateUserBindsNullEmailAndIp) {
   FakeDb db;
   db.query_results.push_back(Rows{Row{{"7"}}});
   UserRepo repo(db);
+  absl::StatusOr<std::unique_ptr<Transaction>> transaction = db.Begin();
+  ASSERT_OK(transaction);
 
-  ASSERT_OK(repo.CreateUser("ellie", "hash", std::nullopt, std::nullopt));
+  ASSERT_OK(repo.CreateUser(**transaction, "ellie", "hash", std::nullopt,
+                            std::nullopt));
   EXPECT_THAT(db.calls[0].params,
               ElementsAre("ellie", "hash", std::nullopt, std::nullopt));
 }
@@ -49,8 +56,11 @@ TEST(UserRepoTest, CreateUserPropagatesAlreadyExists) {
   FakeDb db;
   db.query_results.push_back(absl::AlreadyExistsError("dup [sqlstate 23505]"));
   UserRepo repo(db);
+  absl::StatusOr<std::unique_ptr<Transaction>> transaction = db.Begin();
+  ASSERT_OK(transaction);
 
-  EXPECT_THAT(repo.CreateUser("ellie", "hash", std::nullopt, std::nullopt),
+  EXPECT_THAT(repo.CreateUser(**transaction, "ellie", "hash", std::nullopt,
+                              std::nullopt),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
 

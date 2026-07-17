@@ -13,14 +13,11 @@
 #include "src/common/http.h"
 #include "src/marketdata/provider.h"
 #include "tests/fakes/common/fake_http_client.h"
-#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
+#include "tests/support/symbol.h"
 
 namespace firefly {
 namespace {
-
-// Parse-or-die for test literals; validity is Symbol's own tested contract.
-Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 using ::absl_testing::StatusIs;
 using ::testing::AllOf;

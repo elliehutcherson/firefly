@@ -13,16 +13,13 @@
 #include "src/common/config.h"
 #include "src/common/money.h"
 #include "src/marketdata/candle_repo.h"
-#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
+#include "tests/support/symbol.h"
 
 namespace firefly {
 namespace {
 
 using ::absl_testing::StatusIs;
-
-// Parse-or-die for test literals; validity is Symbol's own tested contract.
-Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 // Integration tests against the docker-compose Postgres. Skipped when no
 // database is reachable (start one with: docker compose up -d db).
