@@ -16,12 +16,16 @@
 #include "src/marketdata/provider.h"
 #include "tests/fakes/common/fake_clock.h"
 #include "tests/fakes/marketdata/fake_market_data_provider.h"
+#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {
 
 using ::absl_testing::StatusIs;
+
+// Parse-or-die for test literals; validity is Symbol's own tested contract.
+Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 constexpr CacheOptions kOptions;  // 30s quotes, 90s minute bars.
 
@@ -37,10 +41,10 @@ TEST(CachedProviderTest, SecondLookupWithinTtlHitsTheCache) {
   FakeClock clock(TestNow());
   CachedProvider provider(inner, clock, kOptions);
 
-  absl::StatusOr<Trade> first = provider.GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> first = provider.GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(first);
   clock.Advance(absl::Seconds(29));
-  absl::StatusOr<Trade> second = provider.GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> second = provider.GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(second);
   EXPECT_EQ(second->price_e4, 1899550);
   EXPECT_EQ(inner.latest_trade_calls.size(), 1);
@@ -53,9 +57,9 @@ TEST(CachedProviderTest, ExpiredEntryRefetches) {
   FakeClock clock(TestNow());
   CachedProvider provider(inner, clock, kOptions);
 
-  ASSERT_OK(provider.GetLatestTrade("AAPL"));
+  ASSERT_OK(provider.GetLatestTrade(Sym("AAPL")));
   clock.Advance(absl::Seconds(31));
-  absl::StatusOr<Trade> second = provider.GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> second = provider.GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(second);
   EXPECT_EQ(second->price_e4, 1900000);
   EXPECT_EQ(inner.latest_trade_calls.size(), 2);
@@ -68,8 +72,8 @@ TEST(CachedProviderTest, SymbolsAreIndependentKeys) {
   FakeClock clock(TestNow());
   CachedProvider provider(inner, clock, kOptions);
 
-  ASSERT_OK(provider.GetLatestTrade("AAPL"));
-  ASSERT_OK(provider.GetLatestTrade("MSFT"));
+  ASSERT_OK(provider.GetLatestTrade(Sym("AAPL")));
+  ASSERT_OK(provider.GetLatestTrade(Sym("MSFT")));
   EXPECT_EQ(inner.latest_trade_calls.size(), 2);
 }
 
@@ -84,15 +88,15 @@ TEST(CachedProviderTest, QuoteCacheEvictsEntryNearestExpirationAtLimit) {
   options.max_quote_entries = 2;
   CachedProvider provider(inner, clock, options);
 
-  ASSERT_OK(provider.GetLatestTrade("AAPL"));
+  ASSERT_OK(provider.GetLatestTrade(Sym("AAPL")));
   clock.Advance(absl::Seconds(1));
-  ASSERT_OK(provider.GetLatestTrade("MSFT"));
+  ASSERT_OK(provider.GetLatestTrade(Sym("MSFT")));
   clock.Advance(absl::Seconds(1));
-  ASSERT_OK(provider.GetLatestTrade("GOOG"));
+  ASSERT_OK(provider.GetLatestTrade(Sym("GOOG")));
 
   // AAPL had the earliest expiration and was evicted despite still being
   // fresh, so requesting it again reaches the provider.
-  absl::StatusOr<Trade> aapl = provider.GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> aapl = provider.GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(aapl);
   EXPECT_EQ(aapl->price_e4, 4);
   EXPECT_EQ(inner.latest_trade_calls.size(), 4);
@@ -105,10 +109,10 @@ TEST(CachedProviderTest, ErrorsAreDeliveredButNeverCached) {
   FakeClock clock(TestNow());
   CachedProvider provider(inner, clock, kOptions);
 
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kUnavailable));
   // Immediately retries upstream instead of serving the cached error.
-  absl::StatusOr<Trade> retry = provider.GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> retry = provider.GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(retry);
   EXPECT_EQ(retry->price_e4, 1899550);
   EXPECT_EQ(inner.latest_trade_calls.size(), 2);
@@ -123,8 +127,8 @@ TEST(CachedProviderTest, DailyBarsPassThroughUncached) {
 
   const absl::CivilDay start(2026, 7, 1);
   const absl::CivilDay end(2026, 7, 13);
-  ASSERT_OK(provider.GetDailyBars("AAPL", start, end));
-  ASSERT_OK(provider.GetDailyBars("AAPL", start, end));
+  ASSERT_OK(provider.GetDailyBars(Sym("AAPL"), start, end));
+  ASSERT_OK(provider.GetDailyBars(Sym("AAPL"), start, end));
   EXPECT_EQ(inner.daily_bars_calls.size(), 2);
 }
 
@@ -136,12 +140,12 @@ TEST(CachedProviderTest, MinuteBarsCacheKeyIncludesRange) {
   CachedProvider provider(inner, clock, kOptions);
 
   const absl::Time start = TestNow() - absl::Hours(2);
-  ASSERT_OK(provider.GetMinuteBars("AAPL", start, TestNow() - absl::Minutes(16)));
+  ASSERT_OK(provider.GetMinuteBars(Sym("AAPL"), start, TestNow() - absl::Minutes(16)));
   // Same range: cache hit.
-  ASSERT_OK(provider.GetMinuteBars("AAPL", start, TestNow() - absl::Minutes(16)));
+  ASSERT_OK(provider.GetMinuteBars(Sym("AAPL"), start, TestNow() - absl::Minutes(16)));
   EXPECT_EQ(inner.minute_bars_calls.size(), 1);
   // Different range: separate key, separate fetch.
-  ASSERT_OK(provider.GetMinuteBars("AAPL", start, TestNow() - absl::Minutes(15)));
+  ASSERT_OK(provider.GetMinuteBars(Sym("AAPL"), start, TestNow() - absl::Minutes(15)));
   EXPECT_EQ(inner.minute_bars_calls.size(), 2);
 }
 
@@ -152,8 +156,8 @@ TEST(CachedProviderTest, TradeAndMinuteBarCachesAreIndependent) {
   FakeClock clock(TestNow());
   CachedProvider provider(inner, clock, kOptions);
 
-  ASSERT_OK(provider.GetLatestTrade("AAPL"));
-  ASSERT_OK(provider.GetMinuteBars("AAPL", TestNow() - absl::Hours(1),
+  ASSERT_OK(provider.GetLatestTrade(Sym("AAPL")));
+  ASSERT_OK(provider.GetMinuteBars(Sym("AAPL"), TestNow() - absl::Hours(1),
                                    TestNow() - absl::Minutes(16)));
   EXPECT_EQ(inner.latest_trade_calls.size(), 1);
   EXPECT_EQ(inner.minute_bars_calls.size(), 1);
@@ -163,7 +167,7 @@ TEST(CachedProviderTest, TradeAndMinuteBarCachesAreIndependent) {
 // while other threads look up the same key.
 class BlockingProvider : public MarketDataProvider {
  public:
-  absl::StatusOr<Trade> GetLatestTrade(const std::string&) override {
+  absl::StatusOr<Trade> GetLatestTrade(const Symbol&) override {
     calls.fetch_add(1);
     if (!entered.HasBeenNotified()) {
       entered.Notify();
@@ -171,12 +175,12 @@ class BlockingProvider : public MarketDataProvider {
     release.WaitForNotification();
     return Trade{.price_e4 = 1899550, .time = absl::UnixEpoch()};
   }
-  absl::StatusOr<std::vector<Bar>> GetDailyBars(const std::string&,
+  absl::StatusOr<std::vector<Bar>> GetDailyBars(const Symbol&,
                                                 absl::CivilDay,
                                                 absl::CivilDay) override {
     return absl::UnimplementedError("unused");
   }
-  absl::StatusOr<std::vector<Bar>> GetMinuteBars(const std::string&,
+  absl::StatusOr<std::vector<Bar>> GetMinuteBars(const Symbol&,
                                                  absl::Time,
                                                  absl::Time) override {
     return absl::UnimplementedError("unused");
@@ -193,11 +197,11 @@ TEST(CachedProviderTest, ConcurrentMissesShareOneUpstreamCall) {
   CachedProvider provider(inner, clock, kOptions);
 
   absl::StatusOr<Trade> results[2];
-  std::thread first([&] { results[0] = provider.GetLatestTrade("AAPL"); });
+  std::thread first([&] { results[0] = provider.GetLatestTrade(Sym("AAPL")); });
   // Only join the fetch once it is definitely in flight; if the second
   // thread wrongly fetched too, calls would hit 2 and the test fails.
   inner.entered.WaitForNotification();
-  std::thread second([&] { results[1] = provider.GetLatestTrade("AAPL"); });
+  std::thread second([&] { results[1] = provider.GetLatestTrade(Sym("AAPL")); });
   absl::SleepFor(absl::Milliseconds(50));  // Let it reach the shared future.
   inner.release.Notify();
   first.join();
@@ -218,9 +222,9 @@ TEST(CachedProviderTest, ZeroCapacityStillCoalescesInflightRequests) {
   CachedProvider provider(inner, clock, options);
 
   absl::StatusOr<Trade> results[2];
-  std::thread first([&] { results[0] = provider.GetLatestTrade("AAPL"); });
+  std::thread first([&] { results[0] = provider.GetLatestTrade(Sym("AAPL")); });
   inner.entered.WaitForNotification();
-  std::thread second([&] { results[1] = provider.GetLatestTrade("AAPL"); });
+  std::thread second([&] { results[1] = provider.GetLatestTrade(Sym("AAPL")); });
   absl::SleepFor(absl::Milliseconds(50));
   inner.release.Notify();
   first.join();
@@ -230,7 +234,7 @@ TEST(CachedProviderTest, ZeroCapacityStillCoalescesInflightRequests) {
   ASSERT_OK(results[0]);
   ASSERT_OK(results[1]);
   // Completed values are not retained at zero capacity.
-  ASSERT_OK(provider.GetLatestTrade("AAPL"));
+  ASSERT_OK(provider.GetLatestTrade(Sym("AAPL")));
   EXPECT_EQ(inner.calls.load(), 2);
 }
 

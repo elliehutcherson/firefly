@@ -51,23 +51,6 @@ class MarketHandlersTest : public ::testing::Test {
   FakeClock clock_{TestNow()};
 };
 
-TEST(NormalizeSymbolTest, AcceptsAndUppercasesValidSymbols) {
-  EXPECT_THAT(NormalizeSymbol("aapl"), IsOkAndHolds("AAPL"));
-  EXPECT_THAT(NormalizeSymbol("AAPL"), IsOkAndHolds("AAPL"));
-  EXPECT_THAT(NormalizeSymbol("brk.b"), IsOkAndHolds("BRK.B"));
-  EXPECT_THAT(NormalizeSymbol("A"), IsOkAndHolds("A"));
-}
-
-TEST(NormalizeSymbolTest, RejectsInjectionAndJunk) {
-  for (const char* junk :
-       {"", ".", "-", ".AAPL", "-AAPL", "AAPL; DROP TABLE users",
-        "TOOLONGSYMBOL", "AA PL", "AAPL'", "aapl%27", "A/B", "1AAPL"}) {
-    EXPECT_THAT(NormalizeSymbol(junk),
-                StatusIs(absl::StatusCode::kInvalidArgument))
-        << "input: '" << junk << "'";
-  }
-}
-
 TEST_F(MarketHandlersTest, UnknownSymbolIs404AndNeverReachesProvider) {
   SymbolMissing();
   EXPECT_THAT(GetQuoteJson(Deps(), "ZZZZ"),

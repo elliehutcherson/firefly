@@ -7,6 +7,7 @@
 #include "absl/status/statusor.h"
 #include "src/db/db.h"
 #include "src/marketdata/instrument_store.h"
+#include "src/common/symbol.h"
 
 namespace firefly {
 
@@ -19,11 +20,11 @@ class InstrumentRepo : public InstrumentStore {
   explicit InstrumentRepo(Db& db) : db_(db) {}
 
   // All active symbols, sorted. The universe the sync job iterates.
-  absl::StatusOr<std::vector<std::string>> ListActiveSymbols() override;
+  absl::StatusOr<std::vector<Symbol>> ListActiveSymbols() override;
 
   // Whether `symbol` (exact, uppercase) is active. The api/ boundary check:
   // requests for symbols outside the universe never reach a provider.
-  absl::StatusOr<bool> Exists(const std::string& symbol) override;
+  absl::StatusOr<bool> Exists(const Symbol& symbol) override;
 
  private:
   Db& db_;

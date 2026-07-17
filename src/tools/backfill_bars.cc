@@ -33,6 +33,7 @@
 #include "src/common/config.h"
 #include "src/db/db.h"
 #include "src/common/http.h"
+#include "src/common/symbol.h"
 #include "src/jobs/daily_bar_sync.h"
 #include "src/marketdata/alpaca.h"
 #include "src/marketdata/candle_repo.h"
@@ -56,7 +57,16 @@ firefly::DailyBarSyncOptions OptionsFromFlags(const firefly::Clock& clock) {
   options.inter_request_delay =
       absl::Milliseconds(absl::GetFlag(FLAGS_delay_ms));
   if (const std::string flag = absl::GetFlag(FLAGS_symbols); !flag.empty()) {
-    options.symbols = absl::StrSplit(flag, ',', absl::SkipEmpty());
+    for (const absl::string_view part :
+         absl::StrSplit(flag, ',', absl::SkipEmpty())) {
+      const absl::StatusOr<firefly::Symbol> symbol =
+          firefly::Symbol::Parse(part);
+      if (!symbol.ok()) {
+        LOG(FATAL) << "bad --symbols entry '" << part
+                   << "': " << symbol.status();
+      }
+      options.symbols.push_back(*symbol);
+    }
   }
   return options;
 }

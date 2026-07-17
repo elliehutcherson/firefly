@@ -1,10 +1,10 @@
 #ifndef FIREFLY_MARKETDATA_INSTRUMENT_STORE_H_
 #define FIREFLY_MARKETDATA_INSTRUMENT_STORE_H_
 
-#include <string>
 #include <vector>
 
 #include "absl/status/statusor.h"
+#include "src/common/symbol.h"
 
 namespace firefly {
 
@@ -13,8 +13,8 @@ class InstrumentStore {
  public:
   virtual ~InstrumentStore() = default;
 
-  virtual absl::StatusOr<std::vector<std::string>> ListActiveSymbols() = 0;
-  virtual absl::StatusOr<bool> Exists(const std::string& symbol) = 0;
+  virtual absl::StatusOr<std::vector<Symbol>> ListActiveSymbols() = 0;
+  virtual absl::StatusOr<bool> Exists(const Symbol& symbol) = 0;
 };
 
 }  // namespace firefly

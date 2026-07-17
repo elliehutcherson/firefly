@@ -13,10 +13,14 @@
 #include "src/common/http.h"
 #include "src/marketdata/provider.h"
 #include "tests/fakes/common/fake_http_client.h"
+#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {
+
+// Parse-or-die for test literals; validity is Symbol's own tested contract.
+Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 using ::absl_testing::StatusIs;
 using ::testing::AllOf;
@@ -49,7 +53,7 @@ TEST_F(AlpacaTest, LatestTradeParsesPriceAndTime) {
       R"({"symbol":"AAPL","trade":{"t":"2026-07-10T19:59:58.123Z","p":189.955,"s":100}})"});
   AlpacaProvider provider = MakeProvider();
 
-  absl::StatusOr<Trade> trade = provider.GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> trade = provider.GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(trade);
   EXPECT_EQ(trade->price_e4, 1899550);
   EXPECT_EQ(trade->time,
@@ -74,7 +78,7 @@ TEST_F(AlpacaTest, DailyBarsParseAndRequestTheSipFeed) {
   AlpacaProvider provider = MakeProvider();
 
   absl::StatusOr<std::vector<Bar>> bars = provider.GetDailyBars(
-      "AAPL", absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
+      Sym("AAPL"), absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
   ASSERT_OK(bars);
   ASSERT_EQ(bars->size(), 2);
   EXPECT_EQ((*bars)[0].time, UtcTime(2026, 1, 2, 5, 0, 0));
@@ -107,7 +111,7 @@ TEST_F(AlpacaTest, DailyBarsFollowPagination) {
   AlpacaProvider provider = MakeProvider();
 
   absl::StatusOr<std::vector<Bar>> bars = provider.GetDailyBars(
-      "AAPL", absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
+      Sym("AAPL"), absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
   ASSERT_OK(bars);
   EXPECT_EQ(bars->size(), 2);
 
@@ -126,7 +130,7 @@ TEST_F(AlpacaTest, PaginationGuardTripsAtMaxPages) {
   }
   AlpacaProvider provider = MakeProvider();
 
-  EXPECT_THAT(provider.GetDailyBars("AAPL", absl::CivilDay(2026, 1, 2),
+  EXPECT_THAT(provider.GetDailyBars(Sym("AAPL"), absl::CivilDay(2026, 1, 2),
                                     absl::CivilDay(2026, 1, 31)),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("pagination did not terminate")));
@@ -149,7 +153,7 @@ TEST_F(AlpacaTest, EmptyNextPageTokenTerminates) {
   AlpacaProvider provider = MakeProvider();
 
   absl::StatusOr<std::vector<Bar>> bars = provider.GetDailyBars(
-      "AAPL", absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
+      Sym("AAPL"), absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
   ASSERT_OK(bars);
   EXPECT_EQ(bars->size(), 1);
   EXPECT_EQ(http_.requests.size(), 1);
@@ -160,7 +164,7 @@ TEST_F(AlpacaTest, MissingBarsAndTokenYieldsEmpty) {
   AlpacaProvider provider = MakeProvider();
 
   absl::StatusOr<std::vector<Bar>> bars = provider.GetDailyBars(
-      "AAPL", absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
+      Sym("AAPL"), absl::CivilDay(2026, 1, 2), absl::CivilDay(2026, 1, 31));
   ASSERT_OK(bars);
   EXPECT_TRUE(bars->empty());
   EXPECT_EQ(http_.requests.size(), 1);
@@ -177,7 +181,7 @@ TEST_F(AlpacaTest, BadBarMidPaginationFailsFast) {
           "next_page_token":null})"});
   AlpacaProvider provider = MakeProvider();
 
-  EXPECT_THAT(provider.GetDailyBars("AAPL", absl::CivilDay(2026, 1, 2),
+  EXPECT_THAT(provider.GetDailyBars(Sym("AAPL"), absl::CivilDay(2026, 1, 2),
                                     absl::CivilDay(2026, 1, 31)),
               StatusIs(absl::StatusCode::kInternal, HasSubstr("not a number")));
   EXPECT_EQ(http_.requests.size(), 2);
@@ -190,7 +194,7 @@ TEST_F(AlpacaTest, BaseUrlOverrideIsUsed) {
                            .base_url = "http://localhost:9999"},
                           http_);
 
-  ASSERT_OK(provider.GetDailyBars("AAPL", absl::CivilDay(2026, 1, 2),
+  ASSERT_OK(provider.GetDailyBars(Sym("AAPL"), absl::CivilDay(2026, 1, 2),
                                   absl::CivilDay(2026, 1, 31)));
   ASSERT_EQ(http_.requests.size(), 1);
   EXPECT_EQ(http_.requests[0].url,
@@ -203,7 +207,7 @@ TEST_F(AlpacaTest, MinuteBarsRequestRfc3339Range) {
   AlpacaProvider provider = MakeProvider();
 
   absl::StatusOr<std::vector<Bar>> bars = provider.GetMinuteBars(
-      "AAPL", UtcTime(2026, 7, 10, 13, 30, 0), UtcTime(2026, 7, 10, 19, 45, 0));
+      Sym("AAPL"), UtcTime(2026, 7, 10, 13, 30, 0), UtcTime(2026, 7, 10, 19, 45, 0));
   ASSERT_OK(bars);
   EXPECT_TRUE(bars->empty());
 
@@ -222,35 +226,35 @@ TEST_F(AlpacaTest, MinuteBarsRequestRfc3339Range) {
 TEST_F(AlpacaTest, RateLimitIsResourceExhausted) {
   http_.responses.push_back(HttpResponse{429, "too many requests"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kResourceExhausted));
 }
 
 TEST_F(AlpacaTest, BadCredentialsArePermissionDenied) {
   http_.responses.push_back(HttpResponse{403, "forbidden"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
 TEST_F(AlpacaTest, Http401IsPermissionDenied) {
   http_.responses.push_back(HttpResponse{401, "unauthorized"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
 TEST_F(AlpacaTest, Http404IsNotFound) {
   http_.responses.push_back(HttpResponse{404, "no such symbol"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST_F(AlpacaTest, Http422IsInvalidArgument) {
   http_.responses.push_back(HttpResponse{422, "range too recent"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetDailyBars("AAPL", absl::CivilDay(2026, 1, 2),
+  EXPECT_THAT(provider.GetDailyBars(Sym("AAPL"), absl::CivilDay(2026, 1, 2),
                                     absl::CivilDay(2026, 1, 31)),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -259,16 +263,16 @@ TEST_F(AlpacaTest, Http5xxIsUnavailable) {
   http_.responses.push_back(HttpResponse{500, "internal server error"});
   http_.responses.push_back(HttpResponse{503, "service unavailable"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kUnavailable));
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kUnavailable));
 }
 
 TEST_F(AlpacaTest, UnexpectedHttpCodeIsInternal) {
   http_.responses.push_back(HttpResponse{418, "i'm a teapot"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal, HasSubstr("HTTP 418")));
 }
 
@@ -276,7 +280,7 @@ TEST_F(AlpacaTest, ErrorBodyIsTruncated) {
   const std::string head(200, 'a');
   http_.responses.push_back(HttpResponse{500, head + "ZZZTAIL"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kUnavailable,
                        AllOf(HasSubstr(head), Not(HasSubstr("ZZZTAIL")))));
 }
@@ -284,7 +288,7 @@ TEST_F(AlpacaTest, ErrorBodyIsTruncated) {
 TEST_F(AlpacaTest, MalformedJsonIsInternal) {
   http_.responses.push_back(HttpResponse{200, "not json at all"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal));
 }
 
@@ -292,7 +296,7 @@ TEST_F(AlpacaTest, MissingFieldIsInternal) {
   http_.responses.push_back(
       HttpResponse{200, R"({"symbol":"AAPL","trade":{"t":"bad","s":1}})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal));
 }
 
@@ -301,7 +305,7 @@ TEST_F(AlpacaTest, NonNumericPriceIsInternal) {
       200,
       R"({"trade":{"t":"2026-07-10T19:59:58Z","p":"189.95","s":100}})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal, HasSubstr("not a number")));
 }
 
@@ -311,7 +315,7 @@ TEST_F(AlpacaTest, NonNumericVolumeIsInternal) {
       R"({"bars":[{"t":"2026-01-02T05:00:00Z","o":1,"h":1,"l":1,"c":1,"v":"1000"}],
           "next_page_token":null})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetDailyBars("AAPL", absl::CivilDay(2026, 1, 2),
+  EXPECT_THAT(provider.GetDailyBars(Sym("AAPL"), absl::CivilDay(2026, 1, 2),
                                     absl::CivilDay(2026, 1, 31)),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("volume is not a number")));
@@ -321,7 +325,7 @@ TEST_F(AlpacaTest, NonStringTimestampIsInternal) {
   http_.responses.push_back(HttpResponse{
       200, R"({"trade":{"t":12345,"p":189.95,"s":100}})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("timestamp is not a string")));
 }
@@ -330,14 +334,14 @@ TEST_F(AlpacaTest, BadTimestampFormatIsInternal) {
   http_.responses.push_back(HttpResponse{
       200, R"({"trade":{"t":"not-a-time","p":189.95,"s":100}})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal, HasSubstr("timestamp")));
 }
 
 TEST_F(AlpacaTest, TradeFieldNotAnObjectIsInternal) {
   http_.responses.push_back(HttpResponse{200, R"({"trade":"oops"})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("is not an object")));
 }
@@ -345,40 +349,15 @@ TEST_F(AlpacaTest, TradeFieldNotAnObjectIsInternal) {
 TEST_F(AlpacaTest, TransportErrorPropagates) {
   http_.responses.push_back(absl::UnavailableError("connection refused"));
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kUnavailable));
-}
-
-TEST_F(AlpacaTest, BadSymbolIsRejectedBeforeAnyRequest) {
-  AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("aapl"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(provider.GetLatestTrade("AAPL/../.."),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(provider.GetDailyBars("", absl::CivilDay(2026, 1, 1),
-                                    absl::CivilDay(2026, 1, 2)),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_TRUE(http_.requests.empty());
-}
-
-TEST_F(AlpacaTest, DotDashOnlySymbolRejected) {
-  // Regression: ".." must not reach the URL path (curl would normalize
-  // "/v2/stocks/../trades/latest" into a different endpoint).
-  AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade(".."),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(provider.GetLatestTrade("-"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(provider.GetLatestTrade(".A"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_TRUE(http_.requests.empty());
 }
 
 TEST_F(AlpacaTest, AbsurdPriceIsInternal) {
   http_.responses.push_back(HttpResponse{
       200, R"({"trade":{"t":"2026-07-10T19:59:58Z","p":1e300,"s":100}})"});
   AlpacaProvider provider = MakeProvider();
-  EXPECT_THAT(provider.GetLatestTrade("AAPL"),
+  EXPECT_THAT(provider.GetLatestTrade(Sym("AAPL")),
               StatusIs(absl::StatusCode::kInternal, HasSubstr("out of range")));
 }
 

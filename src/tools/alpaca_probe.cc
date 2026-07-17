@@ -18,6 +18,7 @@
 #include "src/common/config.h"
 #include "src/common/http.h"
 #include "src/common/money.h"
+#include "src/common/symbol.h"
 #include "src/marketdata/alpaca.h"
 #include "src/marketdata/provider.h"
 
@@ -37,19 +38,24 @@ int main(int argc, char** argv) {
                   "(free paper account at https://alpaca.markets)";
     return 1;
   }
-  const std::string symbol = argc > 1 ? argv[1] : "AAPL";
+  const absl::StatusOr<firefly::Symbol> symbol =
+      firefly::Symbol::Parse(argc > 1 ? argv[1] : "AAPL");
+  if (!symbol.ok()) {
+    LOG(ERROR) << "bad symbol: " << symbol.status();
+    return 1;
+  }
 
   const std::unique_ptr<firefly::HttpClient> http = firefly::CreateHttpClient();
   firefly::AlpacaProvider provider(
       {.key_id = config.alpaca_key_id, .secret_key = config.alpaca_secret_key},
       *http);
 
-  const absl::StatusOr<firefly::Trade> trade = provider.GetLatestTrade(symbol);
+  const absl::StatusOr<firefly::Trade> trade = provider.GetLatestTrade(*symbol);
   if (!trade.ok()) {
-    LOG(ERROR) << "GetLatestTrade(" << symbol << "): " << trade.status();
+    LOG(ERROR) << "GetLatestTrade(" << *symbol << "): " << trade.status();
     return 1;
   }
-  LOG(INFO) << symbol << " last trade $"
+  LOG(INFO) << *symbol << " last trade $"
             << firefly::PriceE4ToString(trade->price_e4) << " at "
             << trade->time;
 
@@ -57,9 +63,9 @@ int main(int argc, char** argv) {
   const absl::CivilDay today =
       absl::ToCivilDay(absl::Now(), absl::UTCTimeZone());
   const absl::StatusOr<std::vector<firefly::Bar>> bars =
-      provider.GetDailyBars(symbol, today - kBackfillDays, today - 1);
+      provider.GetDailyBars(*symbol, today - kBackfillDays, today - 1);
   if (!bars.ok()) {
-    LOG(ERROR) << "GetDailyBars(" << symbol << "): " << bars.status();
+    LOG(ERROR) << "GetDailyBars(" << *symbol << "): " << bars.status();
     return 1;
   }
   LOG(INFO) << bars->size() << " daily bars:";

@@ -38,23 +38,6 @@ constexpr int kHttpUnprocessable = 422;
 constexpr int kHttpTooManyRequests = 429;
 constexpr int kHttpServerError = 500;
 
-// Uppercase letters plus '.' and '-' (BRK.B). Callers normalize case.
-// Must start with a letter so ".." can never reach the URL path.
-bool IsValidSymbol(const std::string& symbol) {
-  if (symbol.empty() || symbol.size() > kMaxSymbolLength) {
-    return false;
-  }
-  if (!absl::ascii_isupper(symbol.front())) {
-    return false;
-  }
-  for (const char c : symbol) {
-    if (!absl::ascii_isupper(c) && c != '.' && c != '-') {
-      return false;
-    }
-  }
-  return true;
-}
-
 std::string FormatRfc3339(absl::Time time) {
   return absl::FormatTime("%Y-%m-%dT%H:%M:%SZ", time, absl::UTCTimeZone());
 }
@@ -170,13 +153,12 @@ AlpacaProvider::AlpacaProvider(AlpacaConfig config, HttpClient& http)
     : config_(std::move(config)), http_(http) {}
 
 absl::StatusOr<Trade> AlpacaProvider::GetLatestTrade(
-    const std::string& symbol) {
-  if (!IsValidSymbol(symbol)) {
-    return absl::InvalidArgumentError(absl::StrCat("bad symbol: ", symbol));
-  }
+    const Symbol& symbol) {
+  // Symbol is valid by construction (src/common/symbol.h): it can never
+  // smuggle path segments ("..") into the URL.
   ASSIGN_OR_RETURN(
       json body, GetJson(http_, config_,
-                         absl::StrCat("/v2/stocks/", symbol, "/trades/latest"),
+                         absl::StrCat("/v2/stocks/", symbol.str(), "/trades/latest"),
                          {{"feed", "iex"}}));
   ASSIGN_OR_RETURN(const json* trade_json, GetField(body, "trade"));
   Trade trade;
@@ -187,25 +169,22 @@ absl::StatusOr<Trade> AlpacaProvider::GetLatestTrade(
 }
 
 absl::StatusOr<std::vector<Bar>> AlpacaProvider::GetDailyBars(
-    const std::string& symbol, absl::CivilDay start, absl::CivilDay end) {
+    const Symbol& symbol, absl::CivilDay start, absl::CivilDay end) {
   return FetchBars(symbol, "1Day", absl::FormatCivilTime(start),
                    absl::FormatCivilTime(end), "split");
 }
 
 absl::StatusOr<std::vector<Bar>> AlpacaProvider::GetMinuteBars(
-    const std::string& symbol, absl::Time start, absl::Time end) {
+    const Symbol& symbol, absl::Time start, absl::Time end) {
   return FetchBars(symbol, "1Min", FormatRfc3339(start), FormatRfc3339(end),
                    "raw");
 }
 
 absl::StatusOr<std::vector<Bar>> AlpacaProvider::FetchBars(
-    const std::string& symbol, const std::string& timeframe,
+    const Symbol& symbol, const std::string& timeframe,
     const std::string& start, const std::string& end,
     const std::string& adjustment) {
-  if (!IsValidSymbol(symbol)) {
-    return absl::InvalidArgumentError(absl::StrCat("bad symbol: ", symbol));
-  }
-  const std::string path = absl::StrCat("/v2/stocks/", symbol, "/bars");
+  const std::string path = absl::StrCat("/v2/stocks/", symbol.str(), "/bars");
   std::vector<Bar> bars;
   std::string page_token;
   for (int page = 0; page < kMaxBarPages; ++page) {

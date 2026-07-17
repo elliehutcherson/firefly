@@ -9,6 +9,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "tests/fakes/db/fake_db.h"
+#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
 
 namespace firefly {
@@ -17,6 +18,9 @@ namespace {
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
+
+// Parse-or-die for test literals; validity is Symbol's own tested contract.
+Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 Row CandleRow(const std::string& day, const std::string& open,
               const std::string& high, const std::string& low,
@@ -33,8 +37,7 @@ TEST(CandleRepoTest, GetRangeParsesRowsAndBindsParams) {
                 "51000000")});
   CandleRepo repo(db);
 
-  absl::StatusOr<std::vector<DailyCandle>> candles = repo.GetRange(
-      "AAPL", absl::CivilDay(2026, 7, 1), absl::CivilDay(2026, 7, 14));
+  absl::StatusOr<std::vector<DailyCandle>> candles = repo.GetRange(Sym("AAPL"), absl::CivilDay(2026, 7, 1), absl::CivilDay(2026, 7, 14));
   ASSERT_OK(candles);
   ASSERT_EQ(candles->size(), 2);
   EXPECT_EQ((*candles)[0].day, absl::CivilDay(2026, 7, 10));
@@ -56,7 +59,7 @@ TEST(CandleRepoTest, GetRangeRejectsMalformedNumeric) {
       "2026-07-10", "not-a-price", "1", "1", "1", "1")});
   CandleRepo repo(db);
 
-  EXPECT_THAT(repo.GetRange("AAPL", absl::CivilDay(2026, 7, 1),
+  EXPECT_THAT(repo.GetRange(Sym("AAPL"), absl::CivilDay(2026, 7, 1),
                             absl::CivilDay(2026, 7, 14)),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -68,7 +71,7 @@ TEST(CandleRepoTest, GetRangeRejectsNullColumn) {
   db.query_results.push_back(Rows{row});
   CandleRepo repo(db);
 
-  EXPECT_THAT(repo.GetRange("AAPL", absl::CivilDay(2026, 7, 1),
+  EXPECT_THAT(repo.GetRange(Sym("AAPL"), absl::CivilDay(2026, 7, 1),
                             absl::CivilDay(2026, 7, 14)),
               StatusIs(absl::StatusCode::kInternal));
 }
@@ -78,8 +81,7 @@ TEST(CandleRepoTest, UpsertCandlesBuildsArraysInOneStatement) {
   db.execute_results.push_back(2);
   CandleRepo repo(db);
 
-  EXPECT_OK(repo.UpsertCandles(
-      "AAPL", {{.day = absl::CivilDay(2026, 7, 10),
+  EXPECT_OK(repo.UpsertCandles(Sym("AAPL"), {{.day = absl::CivilDay(2026, 7, 10),
                 .open_e4 = 1899550,
                 .high_e4 = 1910000,
                 .low_e4 = 1885000,
@@ -106,7 +108,7 @@ TEST(CandleRepoTest, UpsertNothingIsANoOp) {
   FakeDb db;
   CandleRepo repo(db);
 
-  EXPECT_OK(repo.UpsertCandles("AAPL", {}));
+  EXPECT_OK(repo.UpsertCandles(Sym("AAPL"), {}));
   EXPECT_TRUE(db.calls.empty());
 }
 
@@ -116,12 +118,12 @@ TEST(CandleRepoTest, LatestDaysMapsRows) {
       Rows{Row{{"AAPL", "2026-07-13"}}, Row{{"MSFT", "2026-07-10"}}});
   CandleRepo repo(db);
 
-  absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>> latest =
+  absl::StatusOr<absl::flat_hash_map<Symbol, absl::CivilDay>> latest =
       repo.LatestDays();
   ASSERT_OK(latest);
   ASSERT_EQ(latest->size(), 2);
-  EXPECT_EQ(latest->at("AAPL"), absl::CivilDay(2026, 7, 13));
-  EXPECT_EQ(latest->at("MSFT"), absl::CivilDay(2026, 7, 10));
+  EXPECT_EQ(latest->at(Sym("AAPL")), absl::CivilDay(2026, 7, 13));
+  EXPECT_EQ(latest->at(Sym("MSFT")), absl::CivilDay(2026, 7, 10));
 }
 
 }  // namespace

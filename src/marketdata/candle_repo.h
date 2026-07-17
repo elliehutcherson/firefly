@@ -11,6 +11,7 @@
 #include "absl/time/civil_time.h"
 #include "src/db/db.h"
 #include "src/marketdata/candle_store.h"
+#include "src/common/symbol.h"
 
 namespace firefly {
 
@@ -23,18 +24,18 @@ class CandleRepo : public CandleStore {
   explicit CandleRepo(Db& db) : db_(db) {}
 
   // Stored candles over [start, end], both inclusive, oldest first.
-  absl::StatusOr<std::vector<DailyCandle>> GetRange(const std::string& symbol,
+  absl::StatusOr<std::vector<DailyCandle>> GetRange(const Symbol& symbol,
                                                     absl::CivilDay start,
                                                     absl::CivilDay end) override;
 
   // Inserts `candles` for `symbol` in one statement; days already stored are
   // left untouched (history is immutable), so re-runs are idempotent.
-  absl::Status UpsertCandles(const std::string& symbol,
+  absl::Status UpsertCandles(const Symbol& symbol,
                              const std::vector<DailyCandle>& candles) override;
 
   // Latest stored day per symbol — the sync job's one-query view of what is
   // already backfilled. Symbols with no candles are absent.
-  absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>> LatestDays()
+  absl::StatusOr<absl::flat_hash_map<Symbol, absl::CivilDay>> LatestDays()
       override;
 
  private:

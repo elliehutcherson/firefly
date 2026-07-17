@@ -88,24 +88,25 @@ absl::StatusOr<V> CachedProvider::GetOrFetch(
 }
 
 absl::StatusOr<Trade> CachedProvider::GetLatestTrade(
-    const std::string& symbol) {
-  return GetOrFetch<Trade>(trades_, symbol, options_.quote_ttl,
+    const Symbol& symbol) {
+  return GetOrFetch<Trade>(trades_, symbol.str(), options_.quote_ttl,
                            options_.max_quote_entries,
                            [&] { return inner_.GetLatestTrade(symbol); });
 }
 
 absl::StatusOr<std::vector<Bar>> CachedProvider::GetDailyBars(
-    const std::string& symbol, absl::CivilDay start, absl::CivilDay end) {
+    const Symbol& symbol, absl::CivilDay start, absl::CivilDay end) {
   // Uncached by design: daily history lives in candles_daily, and the only
   // callers of this method are backfill/sync jobs.
   return inner_.GetDailyBars(symbol, start, end);
 }
 
 absl::StatusOr<std::vector<Bar>> CachedProvider::GetMinuteBars(
-    const std::string& symbol, absl::Time start, absl::Time end) {
+    const Symbol& symbol, absl::Time start, absl::Time end) {
   const std::string key = absl::StrCat(
-      symbol, "|", absl::FormatTime(absl::RFC3339_full, start, absl::UTCTimeZone()),
-      "|", absl::FormatTime(absl::RFC3339_full, end, absl::UTCTimeZone()));
+      symbol.str(), "|",
+      absl::FormatTime(absl::RFC3339_full, start, absl::UTCTimeZone()), "|",
+      absl::FormatTime(absl::RFC3339_full, end, absl::UTCTimeZone()));
   return GetOrFetch<std::vector<Bar>>(
       minute_bars_, key, options_.minute_bars_ttl,
       options_.max_minute_bar_entries,

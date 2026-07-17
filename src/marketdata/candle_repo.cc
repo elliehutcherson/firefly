@@ -46,13 +46,13 @@ std::string ArrayLiteral(const std::vector<DailyCandle>& candles,
 }  // namespace
 
 absl::StatusOr<std::vector<DailyCandle>> CandleRepo::GetRange(
-    const std::string& symbol, absl::CivilDay start, absl::CivilDay end) {
+    const Symbol& symbol, absl::CivilDay start, absl::CivilDay end) {
   ASSIGN_OR_RETURN(
       const Rows rows,
       db_.Query("SELECT day, open, high, low, close, volume "
                  "FROM candles_daily "
                  "WHERE symbol = $1 AND day >= $2 AND day <= $3 ORDER BY day",
-                 {symbol, absl::FormatCivilTime(start),
+                 {symbol.str(), absl::FormatCivilTime(start),
                   absl::FormatCivilTime(end)}));
   std::vector<DailyCandle> candles;
   candles.reserve(rows.size());
@@ -74,7 +74,7 @@ absl::StatusOr<std::vector<DailyCandle>> CandleRepo::GetRange(
   return candles;
 }
 
-absl::Status CandleRepo::UpsertCandles(const std::string& symbol,
+absl::Status CandleRepo::UpsertCandles(const Symbol& symbol,
                                        const std::vector<DailyCandle>& candles) {
   if (candles.empty()) return absl::OkStatus();
   return db_.Execute(
@@ -84,7 +84,7 @@ absl::Status CandleRepo::UpsertCandles(const std::string& symbol,
              "$2::date[], $3::numeric[], $4::numeric[], $5::numeric[], "
              "$6::numeric[], $7::bigint[]) "
              "ON CONFLICT (symbol, day) DO NOTHING",
-             {symbol,
+             {symbol.str(),
               ArrayLiteral(candles,
                            [](const DailyCandle& c) {
                              return absl::FormatCivilTime(c.day);
@@ -111,18 +111,21 @@ absl::Status CandleRepo::UpsertCandles(const std::string& symbol,
       .status();
 }
 
-absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>>
+absl::StatusOr<absl::flat_hash_map<Symbol, absl::CivilDay>>
 CandleRepo::LatestDays() {
   ASSIGN_OR_RETURN(
       const Rows rows,
       db_.Query("SELECT symbol, max(day) FROM candles_daily GROUP BY symbol"));
-  absl::flat_hash_map<std::string, absl::CivilDay> latest;
+  absl::flat_hash_map<Symbol, absl::CivilDay> latest;
   latest.reserve(rows.size());
   for (const Row& row : rows) {
     const RowReader reader(row, "candles_daily");
-    ASSIGN_OR_RETURN(const absl::string_view symbol, reader.RequiredString(0));
+    ASSIGN_OR_RETURN(const absl::string_view raw, reader.RequiredString(0));
     ASSIGN_OR_RETURN(const absl::CivilDay day, reader.CivilDay(1));
-    latest[std::string(symbol)] = day;
+    // The 0003 regex CHECK guarantees stored symbols parse; a failure here
+    // is a corrupted row, and Parse's InvalidArgument surfaces it.
+    ASSIGN_OR_RETURN(const Symbol symbol, Symbol::Parse(raw));
+    latest[symbol] = day;
   }
   return latest;
 }

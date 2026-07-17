@@ -9,6 +9,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/time/civil_time.h"
+#include "src/common/symbol.h"
 
 namespace firefly {
 
@@ -30,13 +31,13 @@ class CandleStore {
   virtual ~CandleStore() = default;
 
   virtual absl::StatusOr<std::vector<DailyCandle>> GetRange(
-      const std::string& symbol, absl::CivilDay start,
+      const Symbol& symbol, absl::CivilDay start,
       absl::CivilDay end) = 0;
   virtual absl::Status UpsertCandles(
-      const std::string& symbol,
+      const Symbol& symbol,
       const std::vector<DailyCandle>& candles) = 0;
   virtual absl::StatusOr<
-      absl::flat_hash_map<std::string, absl::CivilDay>>
+      absl::flat_hash_map<Symbol, absl::CivilDay>>
   LatestDays() = 0;
 };
 

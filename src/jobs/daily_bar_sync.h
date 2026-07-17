@@ -8,6 +8,7 @@
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
 #include "src/common/clock.h"
+#include "src/common/symbol.h"
 #include "src/marketdata/candle_store.h"
 #include "src/marketdata/instrument_store.h"
 #include "src/marketdata/provider.h"
@@ -26,7 +27,7 @@ struct DailyBarSyncOptions {
 
   // Sync only these symbols instead of the full active universe. Used by the
   // backfill CLI, e.g. to re-backfill one symbol after a stock split.
-  std::vector<std::string> symbols;
+  std::vector<Symbol> symbols;
 };
 
 struct DailyBarSyncStats {

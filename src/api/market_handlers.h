@@ -31,11 +31,6 @@ struct MarketDeps {
   const Clock& clock;
 };
 
-// Uppercases and validates: one A-Z, then up to nine of [A-Z.-] ("AAPL",
-// "BRK.B"). InvalidArgument otherwise — this is the injection boundary; raw
-// request strings never travel further.
-absl::StatusOr<std::string> NormalizeSymbol(const std::string& raw);
-
 // {"symbol","price","time"} — the real-time price a trade would execute at.
 absl::StatusOr<nlohmann::json> GetQuoteJson(const MarketDeps& deps,
                                             const std::string& raw_symbol);

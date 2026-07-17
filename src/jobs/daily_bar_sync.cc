@@ -37,7 +37,7 @@ std::vector<DailyCandle> ToDailyCandles(const std::vector<Bar>& bars,
 
 // Fetches [start, through] for one symbol and stores it. One provider call
 // (paginated internally) and at most one insert.
-absl::StatusOr<int> SyncSymbol(const std::string& symbol, absl::CivilDay start,
+absl::StatusOr<int> SyncSymbol(const Symbol& symbol, absl::CivilDay start,
                                absl::CivilDay through, CandleStore& candles,
                                MarketDataProvider& provider,
                                absl::TimeZone new_york) {
@@ -60,7 +60,7 @@ absl::StatusOr<DailyBarSyncStats> SyncDailyBars(
   const absl::CivilDay through =
       absl::ToCivilDay(clock.Now(), new_york) - 1;
 
-  std::vector<std::string> symbols = options.symbols;
+  std::vector<Symbol> symbols = options.symbols;
   if (symbols.empty()) {
     ASSIGN_OR_RETURN(symbols, instruments.ListActiveSymbols());
   }
@@ -68,7 +68,7 @@ absl::StatusOr<DailyBarSyncStats> SyncDailyBars(
 
   DailyBarSyncStats stats;
   int attempts = 0;
-  for (const std::string& symbol : symbols) {
+  for (const Symbol& symbol : symbols) {
     ++stats.symbols_checked;
 
     absl::CivilDay start = options.backfill_start;

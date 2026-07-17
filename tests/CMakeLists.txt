@@ -19,6 +19,7 @@ function(firefly_add_test name source label)
 endfunction()
 
 firefly_add_test(auth_handlers_test unit/api/auth_handlers_test.cc unit)
+firefly_add_test(symbol_test unit/common/symbol_test.cc unit)
 firefly_add_test(market_handlers_test unit/api/market_handlers_test.cc unit)
 firefly_add_test(rate_limiter_test unit/api/rate_limiter_test.cc unit)
 firefly_add_test(server_test unit/api/server_test.cc unit)

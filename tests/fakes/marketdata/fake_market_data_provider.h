@@ -10,6 +10,7 @@
 #include "absl/status/statusor.h"
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
+#include "src/common/symbol.h"
 #include "src/marketdata/provider.h"
 
 namespace firefly {
@@ -31,8 +32,8 @@ struct FakeMinuteBarsCall {
 // Replays canned results and records every call, like FakeDb.
 class FakeMarketDataProvider : public MarketDataProvider {
  public:
-  absl::StatusOr<Trade> GetLatestTrade(const std::string& symbol) override {
-    latest_trade_calls.push_back(symbol);
+  absl::StatusOr<Trade> GetLatestTrade(const Symbol& symbol) override {
+    latest_trade_calls.push_back(symbol.str());
     if (latest_trade_results.empty()) {
       return absl::InternalError("FakeMarketDataProvider: no trade left");
     }
@@ -41,10 +42,10 @@ class FakeMarketDataProvider : public MarketDataProvider {
     return result;
   }
 
-  absl::StatusOr<std::vector<Bar>> GetDailyBars(const std::string& symbol,
+  absl::StatusOr<std::vector<Bar>> GetDailyBars(const Symbol& symbol,
                                                 absl::CivilDay start,
                                                 absl::CivilDay end) override {
-    daily_bars_calls.push_back({symbol, start, end});
+    daily_bars_calls.push_back({symbol.str(), start, end});
     if (daily_bars_results.empty()) {
       return absl::InternalError("FakeMarketDataProvider: no daily bars left");
     }
@@ -54,10 +55,10 @@ class FakeMarketDataProvider : public MarketDataProvider {
     return result;
   }
 
-  absl::StatusOr<std::vector<Bar>> GetMinuteBars(const std::string& symbol,
+  absl::StatusOr<std::vector<Bar>> GetMinuteBars(const Symbol& symbol,
                                                  absl::Time start,
                                                  absl::Time end) override {
-    minute_bars_calls.push_back({symbol, start, end});
+    minute_bars_calls.push_back({symbol.str(), start, end});
     if (minute_bars_results.empty()) {
       return absl::InternalError("FakeMarketDataProvider: no minute bars left");
     }

@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "src/marketdata/candle_repo.h"
 #include "src/marketdata/instrument_repo.h"
+#include "src/common/symbol.h"
 #include "src/marketdata/provider.h"
 #include "tests/fakes/common/fake_clock.h"
 #include "tests/fakes/db/fake_db.h"
@@ -184,7 +185,7 @@ TEST(DailyBarSyncTest, ExplicitSymbolsSkipTheUniverseQuery) {
 
   absl::StatusOr<DailyBarSyncStats> stats = SyncDailyBars(
       instruments, candles, provider, clock,
-      {.backfill_start = absl::CivilDay(2026, 7, 13), .symbols = {"AAPL"}});
+      {.backfill_start = absl::CivilDay(2026, 7, 13), .symbols = {*Symbol::Parse("AAPL")}});
   ASSERT_OK(stats);
   ASSERT_EQ(provider.daily_bars_calls.size(), 1);
   EXPECT_EQ(provider.daily_bars_calls[0].symbol, "AAPL");

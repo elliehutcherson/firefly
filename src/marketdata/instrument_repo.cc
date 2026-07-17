@@ -11,27 +11,29 @@
 
 namespace firefly {
 
-absl::StatusOr<std::vector<std::string>> InstrumentRepo::ListActiveSymbols() {
+absl::StatusOr<std::vector<Symbol>> InstrumentRepo::ListActiveSymbols() {
   ASSIGN_OR_RETURN(
       const Rows rows,
       db_.Query("SELECT symbol FROM instruments WHERE is_active "
                  "ORDER BY symbol"));
-  std::vector<std::string> symbols;
+  std::vector<Symbol> symbols;
   symbols.reserve(rows.size());
   for (const Row& row : rows) {
     ASSIGN_OR_RETURN(
-        const absl::string_view symbol,
+        const absl::string_view raw,
         RowReader(row, "instruments").RequiredString(0));
-    symbols.emplace_back(symbol);
+    // The 0003 regex CHECK guarantees stored symbols parse.
+    ASSIGN_OR_RETURN(const Symbol symbol, Symbol::Parse(raw));
+    symbols.push_back(symbol);
   }
   return symbols;
 }
 
-absl::StatusOr<bool> InstrumentRepo::Exists(const std::string& symbol) {
+absl::StatusOr<bool> InstrumentRepo::Exists(const Symbol& symbol) {
   ASSIGN_OR_RETURN(
       const Rows rows,
       db_.Query("SELECT 1 FROM instruments WHERE symbol = $1 AND is_active",
-                 {symbol}));
+                 {symbol.str()}));
   return !rows.empty();
 }
 

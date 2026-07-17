@@ -13,12 +13,16 @@
 #include "src/common/config.h"
 #include "src/common/money.h"
 #include "src/marketdata/candle_repo.h"
+#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {
 
 using ::absl_testing::StatusIs;
+
+// Parse-or-die for test literals; validity is Symbol's own tested contract.
+Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 // Integration tests against the docker-compose Postgres. Skipped when no
 // database is reachable (start one with: docker compose up -d db).
@@ -109,12 +113,12 @@ TEST_F(DbTest, CandleRepoRoundTripsThroughRealPostgres) {
                                              .low_e4 = 1900000,
                                              .close_e4 = 1917500,
                                              .volume = 51000000}};
-  ASSERT_OK(repo.UpsertCandles("AAPL", candles));
+  ASSERT_OK(repo.UpsertCandles(Sym("AAPL"), candles));
   // Idempotent: re-inserting the same days is a no-op, not an error.
-  ASSERT_OK(repo.UpsertCandles("AAPL", candles));
+  ASSERT_OK(repo.UpsertCandles(Sym("AAPL"), candles));
 
   absl::StatusOr<std::vector<DailyCandle>> stored =
-      repo.GetRange("AAPL", kDay1, kDay2);
+      repo.GetRange(Sym("AAPL"), kDay1, kDay2);
   ASSERT_OK(stored);
   ASSERT_EQ(stored->size(), 2);
   EXPECT_EQ((*stored)[0].day, kDay1);
@@ -124,11 +128,11 @@ TEST_F(DbTest, CandleRepoRoundTripsThroughRealPostgres) {
   EXPECT_EQ((*stored)[1].day, kDay2);
   EXPECT_EQ((*stored)[1].high_e4, 1920000);
 
-  absl::StatusOr<absl::flat_hash_map<std::string, absl::CivilDay>> latest =
+  absl::StatusOr<absl::flat_hash_map<Symbol, absl::CivilDay>> latest =
       repo.LatestDays();
   ASSERT_OK(latest);
-  ASSERT_TRUE(latest->contains("AAPL"));
-  EXPECT_GE(latest->at("AAPL"), kDay2);
+  ASSERT_TRUE(latest->contains(Sym("AAPL")));
+  EXPECT_GE(latest->at(Sym("AAPL")), kDay2);
 
   ASSERT_OK(db_->Execute(
       "DELETE FROM candles_daily WHERE symbol = 'AAPL' AND day < '1971-01-01'"));

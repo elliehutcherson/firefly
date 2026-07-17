@@ -12,7 +12,7 @@
 
 namespace firefly {
 
-absl::StatusOr<std::vector<std::string>>
+absl::StatusOr<std::vector<Symbol>>
 CachedInstrumentStore::ListActiveSymbols() {
   const std::shared_ptr<const Snapshot> snapshot =
       std::atomic_load_explicit(&snapshot_, std::memory_order_acquire);
@@ -22,7 +22,7 @@ CachedInstrumentStore::ListActiveSymbols() {
   return snapshot->symbols;
 }
 
-absl::StatusOr<bool> CachedInstrumentStore::Exists(const std::string& symbol) {
+absl::StatusOr<bool> CachedInstrumentStore::Exists(const Symbol& symbol) {
   const std::shared_ptr<const Snapshot> snapshot =
       std::atomic_load_explicit(&snapshot_, std::memory_order_acquire);
   if (snapshot == nullptr) {
@@ -32,7 +32,7 @@ absl::StatusOr<bool> CachedInstrumentStore::Exists(const std::string& symbol) {
 }
 
 absl::Status CachedInstrumentStore::Refresh() {
-  ASSIGN_OR_RETURN(std::vector<std::string> symbols,
+  ASSIGN_OR_RETURN(std::vector<Symbol> symbols,
                    source_.ListActiveSymbols());
   if (symbols.empty()) {
     return absl::FailedPreconditionError("active instrument universe is empty");

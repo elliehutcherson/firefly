@@ -1,7 +1,6 @@
 #include "src/api/market_handlers.h"
 
 #include <algorithm>
-#include <cctype>
 #include <string>
 #include <vector>
 
@@ -14,12 +13,11 @@
 #include "src/common/clock.h"
 #include "src/common/money.h"
 #include "src/common/status_macros.h"
+#include "src/common/symbol.h"
 #include "src/marketdata/provider.h"
 
 namespace firefly {
 namespace {
-
-constexpr size_t kMaxSymbolLength = 10;
 
 // The free plan rejects ranges touching the last 15 minutes; one extra
 // minute of margin avoids racing the boundary.
@@ -30,13 +28,12 @@ std::string FormatUtc(absl::Time time) {
   return absl::FormatTime("%Y-%m-%dT%H:%M:%SZ", time, absl::UTCTimeZone());
 }
 
-// Symbol must already be normalized. NotFound for anything outside the
-// curated universe.
+// NotFound for anything outside the curated universe.
 absl::Status RequireKnownSymbol(const MarketDeps& deps,
-                                const std::string& symbol) {
+                                const Symbol& symbol) {
   ASSIGN_OR_RETURN(const bool exists, deps.instruments.Exists(symbol));
   if (!exists) {
-    return absl::NotFoundError(absl::StrCat("unknown symbol: ", symbol));
+    return absl::NotFoundError(absl::StrCat("unknown symbol: ", symbol.str()));
   }
   return absl::OkStatus();
 }
@@ -113,32 +110,13 @@ IntradayWindow ComputeIntradayWindow(absl::Time now, absl::TimeZone new_york) {
 
 }  // namespace
 
-absl::StatusOr<std::string> NormalizeSymbol(const std::string& raw) {
-  if (raw.empty() || raw.size() > kMaxSymbolLength) {
-    return absl::InvalidArgumentError("invalid symbol");
-  }
-  std::string symbol = raw;
-  std::transform(symbol.begin(), symbol.end(), symbol.begin(), [](char c) {
-    return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-  });
-  const auto is_valid = [&](char c, bool first) {
-    return (c >= 'A' && c <= 'Z') || (!first && (c == '.' || c == '-'));
-  };
-  for (size_t i = 0; i < symbol.size(); ++i) {
-    if (!is_valid(symbol[i], i == 0)) {
-      return absl::InvalidArgumentError("invalid symbol");
-    }
-  }
-  return symbol;
-}
-
 absl::StatusOr<nlohmann::json> GetQuoteJson(const MarketDeps& deps,
                                             const std::string& raw_symbol) {
-  ASSIGN_OR_RETURN(const std::string symbol, NormalizeSymbol(raw_symbol));
+  ASSIGN_OR_RETURN(const Symbol symbol, Symbol::Parse(raw_symbol));
   RETURN_IF_ERROR(RequireKnownSymbol(deps, symbol));
   RETURN_IF_ERROR(RequireProvider(deps));
   ASSIGN_OR_RETURN(const Trade trade, deps.provider->GetLatestTrade(symbol));
-  return nlohmann::json{{"symbol", symbol},
+  return nlohmann::json{{"symbol", symbol.str()},
                         {"price", PriceE4ToString(trade.price_e4)},
                         {"time", FormatUtc(trade.time)}};
 }
@@ -146,7 +124,7 @@ absl::StatusOr<nlohmann::json> GetQuoteJson(const MarketDeps& deps,
 absl::StatusOr<nlohmann::json> GetDailyCandlesJson(
     const MarketDeps& deps, const std::string& raw_symbol,
     const std::string& range) {
-  ASSIGN_OR_RETURN(const std::string symbol, NormalizeSymbol(raw_symbol));
+  ASSIGN_OR_RETURN(const Symbol symbol, Symbol::Parse(raw_symbol));
   RETURN_IF_ERROR(RequireKnownSymbol(deps, symbol));
   const absl::CivilDay today =
       absl::ToCivilDay(deps.clock.Now(), NewYorkTimeZone());
@@ -158,12 +136,12 @@ absl::StatusOr<nlohmann::json> GetDailyCandlesJson(
     bars.push_back(ToJson(candle));
   }
   return nlohmann::json{
-      {"symbol", symbol}, {"range", range}, {"bars", std::move(bars)}};
+      {"symbol", symbol.str()}, {"range", range}, {"bars", std::move(bars)}};
 }
 
 absl::StatusOr<nlohmann::json> GetIntradayCandlesJson(
     const MarketDeps& deps, const std::string& raw_symbol) {
-  ASSIGN_OR_RETURN(const std::string symbol, NormalizeSymbol(raw_symbol));
+  ASSIGN_OR_RETURN(const Symbol symbol, Symbol::Parse(raw_symbol));
   RETURN_IF_ERROR(RequireKnownSymbol(deps, symbol));
   RETURN_IF_ERROR(RequireProvider(deps));
   const IntradayWindow window =
@@ -175,7 +153,7 @@ absl::StatusOr<nlohmann::json> GetIntradayCandlesJson(
   for (const Bar& bar : minute_bars) {
     bars.push_back(ToJson(bar));
   }
-  return nlohmann::json{{"symbol", symbol}, {"bars", std::move(bars)}};
+  return nlohmann::json{{"symbol", symbol.str()}, {"bars", std::move(bars)}};
 }
 
 }  // namespace firefly

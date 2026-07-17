@@ -9,6 +9,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "src/marketdata/instrument_store.h"
+#include "src/common/symbol.h"
 
 namespace firefly {
 
@@ -21,8 +22,8 @@ class CachedInstrumentStore : public InstrumentStore {
   // `source` is borrowed and must outlive this store.
   explicit CachedInstrumentStore(InstrumentStore& source) : source_(source) {}
 
-  absl::StatusOr<std::vector<std::string>> ListActiveSymbols() override;
-  absl::StatusOr<bool> Exists(const std::string& symbol) override;
+  absl::StatusOr<std::vector<Symbol>> ListActiveSymbols() override;
+  absl::StatusOr<bool> Exists(const Symbol& symbol) override;
 
   // Reloads the full active universe from the source of truth. Safe to call
   // while readers use the current snapshot.
@@ -30,8 +31,8 @@ class CachedInstrumentStore : public InstrumentStore {
 
  private:
   struct Snapshot {
-    std::vector<std::string> symbols;
-    absl::flat_hash_set<std::string> membership;
+    std::vector<Symbol> symbols;
+    absl::flat_hash_set<Symbol> membership;
   };
 
   InstrumentStore& source_;

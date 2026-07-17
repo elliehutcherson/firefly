@@ -13,10 +13,14 @@
 #include "src/common/money.h"
 #include "src/marketdata/alpaca.h"
 #include "src/marketdata/provider.h"
+#include "src/common/symbol.h"
 #include "tests/support/status_matchers.h"
 
 namespace firefly {
 namespace {
+
+// Parse-or-die for test literals; validity is Symbol's own tested contract.
+Symbol Sym(absl::string_view raw) { return *Symbol::Parse(raw); }
 
 using ::absl_testing::StatusIs;
 
@@ -45,7 +49,7 @@ class AlpacaLiveTest : public ::testing::Test {
 };
 
 TEST_F(AlpacaLiveTest, LatestTradeForAaplIsRecentAndPositive) {
-  absl::StatusOr<Trade> trade = provider_->GetLatestTrade("AAPL");
+  absl::StatusOr<Trade> trade = provider_->GetLatestTrade(Sym("AAPL"));
   ASSERT_OK(trade);
   EXPECT_GT(trade->price_e4, 0);
   // A week absorbs long weekends and market holidays on the IEX feed.
@@ -57,7 +61,7 @@ TEST_F(AlpacaLiveTest, HistoricDailyBarsAreStable) {
   // A clean Mon-Fri trading week with no US market holiday. Exact prices
   // are not asserted: adjustment=split rescales history at every split.
   absl::StatusOr<std::vector<Bar>> bars = provider_->GetDailyBars(
-      "AAPL", absl::CivilDay(2024, 1, 8), absl::CivilDay(2024, 1, 12));
+      Sym("AAPL"), absl::CivilDay(2024, 1, 8), absl::CivilDay(2024, 1, 12));
   ASSERT_OK(bars);
   ASSERT_EQ(bars->size(), 5);
 
@@ -79,7 +83,7 @@ TEST_F(AlpacaLiveTest, HistoricDailyBarsAreStable) {
 TEST_F(AlpacaLiveTest, UnknownSymbolIsNotFound) {
   // Vendor-behavior-dependent: pins Alpaca's 404 for unknown symbols, the
   // one live check that the StatusFromHttp mapping matches reality.
-  EXPECT_THAT(provider_->GetLatestTrade("ZZZZZZZZ"),
+  EXPECT_THAT(provider_->GetLatestTrade(Sym("ZZZZZZZZ")),
               StatusIs(absl::StatusCode::kNotFound));
 }
 

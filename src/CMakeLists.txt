@@ -12,6 +12,7 @@ add_library(firefly_lib
     common/config.cc
     common/http.cc
     common/money.cc
+    common/symbol.cc
     db/connection_pool.cc
     db/db.cc
     db/row_reader.cc
