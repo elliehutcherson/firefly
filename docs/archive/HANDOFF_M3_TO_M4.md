@@ -1,4 +1,11 @@
-# Firefly handoff
+# Firefly handoff — Milestone 3 review closeout → Milestone 4 (trading)
+
+> **DEPRECATED — historical artifact.** This handoff was written 2026-07-16,
+> after the Milestone 3 architectural-review closeout, to hand work into
+> Milestone 4 (trading). Milestone 4 landed 2026-07-17 (commits
+> 94a8453..e9f0b12, one per phase), so the repository state and "next steps"
+> below no longer describe reality. Kept for history; do not follow it.
+> Current state: docs/ARCHITECTURE.md milestones + git log.
 
 Updated: 2026-07-16
 

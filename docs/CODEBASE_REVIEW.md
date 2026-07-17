@@ -30,7 +30,9 @@ Deliberate deferrals:
 - Cash bounds depend on the trading and margin arithmetic. Define them during
   Milestone 4 rather than encoding a speculative database policy.
 
-See `docs/HANDOFF.md` for the current repository state and next work.
+The handoff that accompanied this review is archived at
+`docs/archive/HANDOFF_M3_TO_M4.md` (its "next work" — Milestone 4 trading —
+has since landed).
 
 ## Executive summary
 
