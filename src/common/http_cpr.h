@@ -3,6 +3,8 @@
 
 #include <functional>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/status/statusor.h"
 #include "src/common/http.h"
@@ -21,6 +23,7 @@ struct TransportResult {
   std::string error_message;
   int status_code = 0;
   std::string body;
+  std::vector<std::pair<std::string, std::string>> cookies;
 };
 
 // Exposed for testing the Status-mapping logic in isolation; production code

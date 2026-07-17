@@ -21,11 +21,17 @@ struct HttpRequest {
   std::vector<std::pair<std::string, std::string>> query_params;
   // POST only: sent URL-encoded as application/x-www-form-urlencoded.
   std::vector<std::pair<std::string, std::string>> form;
+  // POST only: raw request body, sent as application/json. When set, `form`
+  // is ignored.
+  std::string body;
 };
 
 struct HttpResponse {
   int status_code = 0;
   std::string body;
+  // Cookies the response set, as (name, value) — how a client carries a
+  // server session (e2e tests drive the real login flow through this).
+  std::vector<std::pair<std::string, std::string>> cookies;
 };
 
 enum class HttpMethod : std::uint8_t { kGet, kPost };

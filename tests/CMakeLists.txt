@@ -63,3 +63,12 @@ firefly_add_test(trading_repo_integration_test
 # Real Alpaca API; self-skips without API credentials.
 firefly_add_test(alpaca_live_test
     integration/marketdata/alpaca_live_test.cc integration)
+
+# Full application through its public interface: spawns the real firefly
+# binary against real Postgres and Alpaca, drives the signup -> trade ->
+# portfolio flow over HTTP with the session cookie. Self-skips without
+# credentials or a database; enable with RUN_E2E=1.
+firefly_add_test(trading_flow_e2e_test e2e/trading_flow_test.cc e2e)
+target_compile_definitions(trading_flow_e2e_test PRIVATE
+    FIREFLY_SERVER_BINARY="$<TARGET_FILE:firefly>")
+add_dependencies(trading_flow_e2e_test firefly)

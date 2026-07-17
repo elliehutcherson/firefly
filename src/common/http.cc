@@ -24,7 +24,11 @@ TransportResult DoTransport(const HttpRequest& request, HttpMethod method) {
     params.Add({name, value});
   }
   cpr::Response response;
-  if (method == HttpMethod::kPost) {
+  if (method == HttpMethod::kPost && !request.body.empty()) {
+    header.emplace("Content-Type", "application/json");
+    response = cpr::Post(cpr::Url{request.url}, header, params,
+                         cpr::Body{request.body}, cpr::Timeout{kTimeoutMs});
+  } else if (method == HttpMethod::kPost) {
     // cpr::Payload URL-encodes and sets application/x-www-form-urlencoded.
     cpr::Payload payload({});
     for (const auto& [name, value] : request.form) {
@@ -36,13 +40,17 @@ TransportResult DoTransport(const HttpRequest& request, HttpMethod method) {
     response = cpr::Get(cpr::Url{request.url}, header, params,
                         cpr::Timeout{kTimeoutMs});
   }
-  return TransportResult{
+  TransportResult result{
       .ok = response.error.code == cpr::ErrorCode::OK,
       .timed_out = response.error.code == cpr::ErrorCode::OPERATION_TIMEDOUT,
       .error_message = response.error.message,
       .status_code = static_cast<int>(response.status_code),
       .body = std::move(response.text),
   };
+  for (const cpr::Cookie& cookie : response.cookies) {
+    result.cookies.emplace_back(cookie.GetName(), cookie.GetValue());
+  }
+  return result;
 }
 
 const char* MethodName(HttpMethod method) {
@@ -70,7 +78,9 @@ absl::StatusOr<HttpResponse> CprHttpClient::Perform(const HttpRequest& request,
                                                request.url,
                                                " failed: ", result.error_message));
   }
-  return HttpResponse{result.status_code, std::move(result.body)};
+  return HttpResponse{.status_code = result.status_code,
+                      .body = std::move(result.body),
+                      .cookies = std::move(result.cookies)};
 }
 
 absl::StatusOr<HttpResponse> CprHttpClient::Get(const HttpRequest& request) {
