@@ -12,6 +12,7 @@
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
 #include "src/auth/crypto.h"
+#include "src/auth/session_auth.h"
 #include "src/auth/session_store.h"
 #include "src/auth/user_store.h"
 #include "src/common/status_macros.h"
@@ -26,10 +27,6 @@ constexpr size_t kMinPassword = 8;
 constexpr size_t kMaxPassword = 128;
 constexpr size_t kMaxEmail = 254;
 constexpr size_t kMaxClientIp = 45;  // Longest textual IPv6.
-
-// Renew the sliding session window at most this often; bounds session
-// writes to one per hour however chatty the client is.
-constexpr absl::Duration kTouchInterval = absl::Hours(1);
 
 struct Credentials {
   std::string username;
@@ -106,27 +103,6 @@ absl::StatusOr<std::string> StartSession(
       transaction, Sha256Hex(token), user_id, now, now + deps.session_ttl,
       client_ip));
   return token;
-}
-
-// Session lookup shared by /me (and, later, everything authenticated).
-// Renews the sliding window at most once per kTouchInterval.
-absl::StatusOr<SessionRecord> RequireSession(const AuthDeps& deps,
-                                             const std::string& cookie_token) {
-  if (cookie_token.empty()) {
-    return absl::UnauthenticatedError("not signed in");
-  }
-  const std::string token_hash = Sha256Hex(cookie_token);
-  const absl::Time now = deps.clock.Now();
-  ASSIGN_OR_RETURN(const std::optional<SessionRecord> session,
-                   deps.sessions.FindSession(token_hash, now));
-  if (!session.has_value()) {
-    return absl::UnauthenticatedError("not signed in");
-  }
-  if (now - session->last_seen_at > kTouchInterval) {
-    RETURN_IF_ERROR(
-        deps.sessions.TouchSession(token_hash, now, now + deps.session_ttl));
-  }
-  return *session;
 }
 
 }  // namespace
@@ -226,8 +202,11 @@ absl::StatusOr<AuthResult> Logout(const AuthDeps& deps,
 
 absl::StatusOr<nlohmann::json> GetMeJson(const AuthDeps& deps,
                                          const std::string& cookie_token) {
+  const SessionAuth auth{.sessions = deps.sessions,
+                         .clock = deps.clock,
+                         .session_ttl = deps.session_ttl};
   ASSIGN_OR_RETURN(const SessionRecord session,
-                   RequireSession(deps, cookie_token));
+                   RequireSession(auth, cookie_token));
   ASSIGN_OR_RETURN(const UserProfile profile,
                    deps.users.GetUser(session.user_id));
   nlohmann::json body = {{"user_id", profile.id},

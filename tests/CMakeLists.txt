@@ -26,6 +26,7 @@ firefly_add_test(server_test unit/api/server_test.cc unit)
 firefly_add_test(status_mapping_test unit/api/status_mapping_test.cc unit)
 
 firefly_add_test(crypto_test unit/auth/crypto_test.cc unit)
+firefly_add_test(session_auth_test unit/auth/session_auth_test.cc unit)
 firefly_add_test(session_repo_test unit/auth/session_repo_test.cc unit)
 firefly_add_test(turnstile_test unit/auth/turnstile_test.cc unit)
 firefly_add_test(user_repo_test unit/auth/user_repo_test.cc unit)
