@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /src
 COPY . .
-RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build --target firefly
+RUN cmake --preset release -G Ninja \
+    && cmake --build --preset release --target firefly \
+    && cmake --install build/release --prefix /stage --component Runtime
 
 # Runtime stage: just the binary and the shared libraries it links.
 FROM debian:bookworm-slim
@@ -21,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 10001 firefly
 
-COPY --from=build /src/build/bin/firefly /usr/local/bin/firefly
+COPY --from=build /stage/ /usr/local/
 
 USER firefly
 EXPOSE 8080

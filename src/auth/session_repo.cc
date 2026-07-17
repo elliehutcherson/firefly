@@ -1,4 +1,4 @@
-#include "src/auth/session_repo.h"
+#include "auth/session_repo.h"
 
 #include <cstdint>
 #include <optional>
@@ -8,9 +8,9 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/time/time.h"
-#include "src/db/db.h"
-#include "src/db/row_reader.h"
-#include "src/common/status_macros.h"
+#include "db/db.h"
+#include "db/row_reader.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 namespace {

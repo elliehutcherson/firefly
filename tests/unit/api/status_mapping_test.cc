@@ -1,4 +1,4 @@
-#include "src/api/status_mapping.h"
+#include "api/status_mapping.h"
 
 #include "absl/status/status.h"
 #include "gtest/gtest.h"

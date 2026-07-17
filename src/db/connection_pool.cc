@@ -1,4 +1,4 @@
-#include "src/db/connection_pool.h"
+#include "db/connection_pool.h"
 
 #include <chrono>
 #include <memory>

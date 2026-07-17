@@ -7,9 +7,9 @@
 #include "absl/status/statusor.h"
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
-#include "src/common/http.h"
-#include "src/marketdata/provider.h"
-#include "src/common/symbol.h"
+#include "common/http.h"
+#include "marketdata/provider.h"
+#include "common/symbol.h"
 
 namespace firefly {
 

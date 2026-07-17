@@ -1,4 +1,4 @@
-#include "src/api/auth_handlers.h"
+#include "api/auth_handlers.h"
 
 #include <cstdint>
 #include <memory>
@@ -11,12 +11,12 @@
 #include "absl/strings/str_cat.h"
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
-#include "src/auth/crypto.h"
-#include "src/auth/session_auth.h"
-#include "src/auth/session_store.h"
-#include "src/auth/user_store.h"
-#include "src/common/status_macros.h"
-#include "src/db/transaction.h"
+#include "auth/crypto.h"
+#include "auth/session_auth.h"
+#include "auth/session_store.h"
+#include "auth/user_store.h"
+#include "common/status_macros.h"
+#include "db/transaction.h"
 
 namespace firefly {
 namespace {

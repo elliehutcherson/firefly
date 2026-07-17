@@ -1,4 +1,4 @@
-#include "src/auth/session_repo.h"
+#include "auth/session_repo.h"
 
 #include <optional>
 #include <string>
@@ -8,8 +8,8 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/support/status_matchers.h"
+#include "fakes/db/fake_db.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

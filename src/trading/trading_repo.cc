@@ -1,4 +1,4 @@
-#include "src/trading/trading_repo.h"
+#include "trading/trading_repo.h"
 
 #include <cstdint>
 #include <memory>
@@ -10,12 +10,12 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "src/common/money.h"
-#include "src/common/status_macros.h"
-#include "src/common/symbol.h"
-#include "src/db/row_reader.h"
-#include "src/db/transaction.h"
-#include "src/trading/order_math.h"
+#include "common/money.h"
+#include "common/status_macros.h"
+#include "common/symbol.h"
+#include "db/row_reader.h"
+#include "db/transaction.h"
+#include "trading/order_math.h"
 
 namespace firefly {
 namespace {

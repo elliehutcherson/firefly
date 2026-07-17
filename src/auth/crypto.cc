@@ -1,4 +1,4 @@
-#include "src/auth/crypto.h"
+#include "auth/crypto.h"
 
 #include <sodium.h>
 

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "absl/time/time.h"
-#include "src/common/clock.h"
+#include "common/clock.h"
 
 namespace firefly {
 

@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "src/db/db.h"
-#include "src/marketdata/instrument_store.h"
-#include "src/common/symbol.h"
+#include "db/db.h"
+#include "marketdata/instrument_store.h"
+#include "common/symbol.h"
 
 namespace firefly {
 

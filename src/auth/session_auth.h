@@ -5,8 +5,8 @@
 
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "src/auth/session_store.h"
-#include "src/common/clock.h"
+#include "auth/session_store.h"
+#include "common/clock.h"
 
 namespace firefly {
 

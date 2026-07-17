@@ -1,4 +1,4 @@
-#include "src/db/row_reader.h"
+#include "db/row_reader.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -11,7 +11,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/civil_time.h"
-#include "src/common/status_macros.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 

@@ -1,4 +1,4 @@
-#include "src/api/rate_limiter.h"
+#include "api/rate_limiter.h"
 
 #include <atomic>
 #include <string>
@@ -8,7 +8,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/time/time.h"
 #include "gtest/gtest.h"
-#include "tests/fakes/common/fake_clock.h"
+#include "fakes/common/fake_clock.h"
 
 namespace firefly {
 namespace {

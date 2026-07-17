@@ -3,7 +3,8 @@ include(GoogleTest)
 # Shared dependencies for test targets. Fakes and matchers remain headers so
 # tests pay only for the support they include.
 add_library(firefly_test_support INTERFACE)
-target_include_directories(firefly_test_support INTERFACE ${CMAKE_SOURCE_DIR})
+target_include_directories(firefly_test_support INTERFACE
+    ${PROJECT_SOURCE_DIR}/tests)
 target_link_libraries(firefly_test_support INTERFACE
     firefly_lib
     absl::status_matchers

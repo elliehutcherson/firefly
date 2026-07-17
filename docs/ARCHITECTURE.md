@@ -86,7 +86,7 @@ static SPA, so no server-side templating is needed.
 | Password hashing (argon2id), random tokens | libsodium | system `libsodium-dev` |
 | Tests | googletest | git submodule |
 
-Dependency policy: **git submodules under `include/`, built with
+Dependency policy: **git submodules under `third_party/`, built with
 `add_subdirectory` or a small interface target in `cmake/`** (see zebes).
 Only stable-ABI C libraries come from the system (libpq, libcurl, libsodium);
 the Dockerfile pins them for production.

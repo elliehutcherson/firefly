@@ -5,7 +5,7 @@
 #include <string>
 
 #include "absl/status/statusor.h"
-#include "src/db/db_types.h"
+#include "db/db_types.h"
 
 namespace firefly {
 

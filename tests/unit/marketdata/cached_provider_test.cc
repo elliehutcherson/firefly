@@ -1,4 +1,4 @@
-#include "src/marketdata/cached_provider.h"
+#include "marketdata/cached_provider.h"
 
 #include <atomic>
 #include <string>
@@ -13,11 +13,11 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/marketdata/provider.h"
-#include "tests/fakes/common/fake_clock.h"
-#include "tests/fakes/marketdata/fake_market_data_provider.h"
-#include "tests/support/status_matchers.h"
-#include "tests/support/symbol.h"
+#include "marketdata/provider.h"
+#include "fakes/common/fake_clock.h"
+#include "fakes/marketdata/fake_market_data_provider.h"
+#include "support/status_matchers.h"
+#include "support/symbol.h"
 
 namespace firefly {
 namespace {

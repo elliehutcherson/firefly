@@ -9,8 +9,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "src/auth/session_store.h"
-#include "src/db/transaction.h"
+#include "auth/session_store.h"
+#include "db/transaction.h"
 
 namespace firefly {
 

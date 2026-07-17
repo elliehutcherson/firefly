@@ -15,10 +15,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "nlohmann/json.hpp"
-#include "src/common/config.h"
-#include "src/common/http.h"
-#include "src/db/db.h"
-#include "tests/support/status_matchers.h"
+#include "common/config.h"
+#include "common/http.h"
+#include "db/db.h"
+#include "support/status_matchers.h"
 
 // The Milestone 4 verification flow, automated: spawn the real firefly
 // binary (FIREFLY_SERVER_BINARY, injected by CMake), drive its public HTTP

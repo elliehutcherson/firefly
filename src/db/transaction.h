@@ -2,7 +2,7 @@
 #define FIREFLY_DB_TRANSACTION_H_
 
 #include "absl/status/status.h"
-#include "src/db/sql_executor.h"
+#include "db/sql_executor.h"
 
 namespace firefly {
 

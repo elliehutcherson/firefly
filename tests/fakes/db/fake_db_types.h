@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "src/db/db_types.h"
+#include "db/db_types.h"
 
 namespace firefly {
 

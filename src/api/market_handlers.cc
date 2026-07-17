@@ -1,4 +1,4 @@
-#include "src/api/market_handlers.h"
+#include "api/market_handlers.h"
 
 #include <algorithm>
 #include <string>
@@ -10,11 +10,11 @@
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
-#include "src/common/clock.h"
-#include "src/common/money.h"
-#include "src/common/status_macros.h"
-#include "src/common/symbol.h"
-#include "src/marketdata/provider.h"
+#include "common/clock.h"
+#include "common/money.h"
+#include "common/status_macros.h"
+#include "common/symbol.h"
+#include "marketdata/provider.h"
 
 namespace firefly {
 namespace {

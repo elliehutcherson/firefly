@@ -9,7 +9,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/civil_time.h"
-#include "src/db/db_types.h"
+#include "db/db_types.h"
 
 namespace firefly {
 

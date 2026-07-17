@@ -1,13 +1,13 @@
-#include "src/marketdata/instrument_repo.h"
+#include "marketdata/instrument_repo.h"
 
 #include <string>
 #include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "src/common/status_macros.h"
-#include "src/db/db.h"
-#include "src/db/row_reader.h"
+#include "common/status_macros.h"
+#include "db/db.h"
+#include "db/row_reader.h"
 
 namespace firefly {
 

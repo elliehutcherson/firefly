@@ -1,4 +1,4 @@
-#include "src/auth/session_auth.h"
+#include "auth/session_auth.h"
 
 #include <optional>
 #include <string>
@@ -6,9 +6,9 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "src/auth/crypto.h"
-#include "src/auth/session_store.h"
-#include "src/common/status_macros.h"
+#include "auth/crypto.h"
+#include "auth/session_store.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 namespace {

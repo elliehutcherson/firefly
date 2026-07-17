@@ -6,10 +6,10 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "nlohmann/json.hpp"
-#include "src/common/clock.h"
-#include "src/marketdata/candle_store.h"
-#include "src/marketdata/instrument_store.h"
-#include "src/marketdata/provider.h"
+#include "common/clock.h"
+#include "marketdata/candle_store.h"
+#include "marketdata/instrument_store.h"
+#include "marketdata/provider.h"
 
 namespace firefly {
 

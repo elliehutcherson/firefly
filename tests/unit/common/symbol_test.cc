@@ -1,4 +1,4 @@
-#include "src/common/symbol.h"
+#include "common/symbol.h"
 
 #include <sstream>
 #include <string>
@@ -8,7 +8,7 @@
 #include "absl/strings/str_cat.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tests/support/status_matchers.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

@@ -1,4 +1,4 @@
-#include "src/auth/session_auth.h"
+#include "auth/session_auth.h"
 
 #include <string>
 
@@ -7,11 +7,11 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/auth/crypto.h"
-#include "src/auth/session_store.h"
-#include "tests/fakes/auth/fake_session_store.h"
-#include "tests/fakes/common/fake_clock.h"
-#include "tests/support/status_matchers.h"
+#include "auth/crypto.h"
+#include "auth/session_store.h"
+#include "fakes/auth/fake_session_store.h"
+#include "fakes/common/fake_clock.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

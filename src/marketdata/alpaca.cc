@@ -1,4 +1,4 @@
-#include "src/marketdata/alpaca.h"
+#include "marketdata/alpaca.h"
 
 #include <cmath>
 #include <cstdint>
@@ -13,9 +13,9 @@
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
-#include "src/common/http.h"
-#include "src/common/money.h"
-#include "src/common/status_macros.h"
+#include "common/http.h"
+#include "common/money.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 namespace {

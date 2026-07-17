@@ -1,4 +1,4 @@
-#include "src/db/db.h"
+#include "db/db.h"
 
 #include <memory>
 #include <optional>
@@ -10,11 +10,11 @@
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
 #include "gtest/gtest.h"
-#include "src/common/config.h"
-#include "src/common/money.h"
-#include "src/marketdata/candle_repo.h"
-#include "tests/support/status_matchers.h"
-#include "tests/support/symbol.h"
+#include "common/config.h"
+#include "common/money.h"
+#include "marketdata/candle_repo.h"
+#include "support/status_matchers.h"
+#include "support/symbol.h"
 
 namespace firefly {
 namespace {

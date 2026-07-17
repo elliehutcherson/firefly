@@ -1,4 +1,4 @@
-#include "src/marketdata/cached_instrument_store.h"
+#include "marketdata/cached_instrument_store.h"
 
 #include <algorithm>
 #include <atomic>
@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "absl/status/status.h"
-#include "src/common/status_macros.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 

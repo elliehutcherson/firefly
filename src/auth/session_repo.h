@@ -8,8 +8,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "src/auth/session_store.h"
-#include "src/db/db.h"
+#include "auth/session_store.h"
+#include "db/db.h"
 
 namespace firefly {
 

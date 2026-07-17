@@ -1,10 +1,10 @@
-#include "src/common/http_cpr.h"
+#include "common/http_cpr.h"
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "gtest/gtest.h"
-#include "src/common/http.h"
-#include "tests/support/status_matchers.h"
+#include "common/http.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

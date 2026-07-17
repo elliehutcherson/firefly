@@ -1,4 +1,4 @@
-#include "src/api/server.h"
+#include "api/server.h"
 
 #include <cstdint>
 #include <optional>
@@ -13,11 +13,11 @@
 #include "crow.h"  // IWYU pragma: keep
 #include "crow/middlewares/cookie_parser.h"
 #include "nlohmann/json.hpp"
-#include "src/api/auth_handlers.h"
-#include "src/api/market_handlers.h"
-#include "src/api/rate_limiter.h"
-#include "src/api/status_mapping.h"
-#include "src/api/trading_handlers.h"
+#include "api/auth_handlers.h"
+#include "api/market_handlers.h"
+#include "api/rate_limiter.h"
+#include "api/status_mapping.h"
+#include "api/trading_handlers.h"
 
 namespace firefly {
 namespace {

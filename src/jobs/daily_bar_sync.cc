@@ -1,4 +1,4 @@
-#include "src/jobs/daily_bar_sync.h"
+#include "jobs/daily_bar_sync.h"
 
 #include <algorithm>
 #include <string>
@@ -11,11 +11,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
-#include "src/common/clock.h"
-#include "src/common/status_macros.h"
-#include "src/marketdata/candle_store.h"
-#include "src/marketdata/instrument_store.h"
-#include "src/marketdata/provider.h"
+#include "common/clock.h"
+#include "common/status_macros.h"
+#include "marketdata/candle_store.h"
+#include "marketdata/instrument_store.h"
+#include "marketdata/provider.h"
 
 namespace firefly {
 namespace {

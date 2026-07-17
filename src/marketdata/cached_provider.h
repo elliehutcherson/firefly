@@ -13,9 +13,9 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
-#include "src/common/clock.h"
-#include "src/marketdata/provider.h"
-#include "src/common/symbol.h"
+#include "common/clock.h"
+#include "marketdata/provider.h"
+#include "common/symbol.h"
 
 namespace firefly {
 

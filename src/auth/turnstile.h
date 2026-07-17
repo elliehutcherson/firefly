@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
-#include "src/common/http.h"
+#include "common/http.h"
 
 namespace firefly {
 

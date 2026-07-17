@@ -1,4 +1,4 @@
-#include "src/db/db.h"
+#include "db/db.h"
 
 #include <cstdint>
 #include <exception>
@@ -10,8 +10,8 @@
 #include <pqxx/pqxx>
 
 #include "absl/log/log.h"
-#include "src/common/status_macros.h"
-#include "src/db/connection_pool.h"
+#include "common/status_macros.h"
+#include "db/connection_pool.h"
 
 namespace firefly {
 namespace {

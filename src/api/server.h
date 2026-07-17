@@ -1,11 +1,11 @@
 #ifndef FIREFLY_API_SERVER_H_
 #define FIREFLY_API_SERVER_H_
 
-#include "src/api/auth_handlers.h"
-#include "src/api/market_handlers.h"
-#include "src/api/trading_handlers.h"
-#include "src/common/config.h"
-#include "src/db/db.h"
+#include "api/auth_handlers.h"
+#include "api/market_handlers.h"
+#include "api/trading_handlers.h"
+#include "common/config.h"
+#include "db/db.h"
 
 namespace firefly {
 

@@ -1,4 +1,4 @@
-#include "src/api/auth_handlers.h"
+#include "api/auth_handlers.h"
 
 #include <optional>
 #include <string>
@@ -10,15 +10,15 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "nlohmann/json.hpp"
-#include "src/auth/crypto.h"
-#include "src/auth/session_repo.h"
-#include "src/auth/turnstile.h"
-#include "src/auth/user_repo.h"
-#include "src/db/db.h"
-#include "tests/fakes/common/fake_clock.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/fakes/common/fake_http_client.h"
-#include "tests/support/status_matchers.h"
+#include "auth/crypto.h"
+#include "auth/session_repo.h"
+#include "auth/turnstile.h"
+#include "auth/user_repo.h"
+#include "db/db.h"
+#include "fakes/common/fake_clock.h"
+#include "fakes/db/fake_db.h"
+#include "fakes/common/fake_http_client.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

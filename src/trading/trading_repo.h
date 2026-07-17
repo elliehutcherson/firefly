@@ -4,10 +4,10 @@
 #include <cstdint>
 
 #include "absl/status/statusor.h"
-#include "src/common/symbol.h"
-#include "src/db/db.h"
-#include "src/trading/order_math.h"
-#include "src/trading/trading_store.h"
+#include "common/symbol.h"
+#include "db/db.h"
+#include "trading/order_math.h"
+#include "trading/trading_store.h"
 
 namespace firefly {
 

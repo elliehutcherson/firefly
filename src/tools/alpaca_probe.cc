@@ -15,12 +15,12 @@
 #include "absl/time/civil_time.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "src/common/config.h"
-#include "src/common/http.h"
-#include "src/common/money.h"
-#include "src/common/symbol.h"
-#include "src/marketdata/alpaca.h"
-#include "src/marketdata/provider.h"
+#include "common/config.h"
+#include "common/http.h"
+#include "common/money.h"
+#include "common/symbol.h"
+#include "marketdata/alpaca.h"
+#include "marketdata/provider.h"
 
 namespace {
 

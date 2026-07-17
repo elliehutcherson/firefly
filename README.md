@@ -65,6 +65,6 @@ curl localhost:8080/healthz
 
 ## Dependencies
 
-C++ dependencies are git submodules under `include/`, pinned to release tags
+C++ dependencies are git submodules under `third_party/`, pinned to release tags
 and built from source via CMake. Only stable-ABI C libraries (libpq, libcurl,
 libsodium) come from the system.

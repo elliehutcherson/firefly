@@ -1,4 +1,4 @@
-#include "src/trading/order_math.h"
+#include "trading/order_math.h"
 
 #include <cstdint>
 
@@ -6,8 +6,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "src/common/money.h"
-#include "src/common/status_macros.h"
+#include "common/money.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 namespace {

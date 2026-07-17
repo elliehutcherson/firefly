@@ -8,8 +8,8 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "src/marketdata/instrument_store.h"
-#include "src/common/symbol.h"
+#include "marketdata/instrument_store.h"
+#include "common/symbol.h"
 
 namespace firefly {
 

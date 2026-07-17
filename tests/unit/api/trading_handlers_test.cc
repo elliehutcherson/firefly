@@ -1,4 +1,4 @@
-#include "src/api/trading_handlers.h"
+#include "api/trading_handlers.h"
 
 #include <cstdint>
 #include <string>
@@ -10,19 +10,19 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "nlohmann/json.hpp"
-#include "src/auth/crypto.h"
-#include "src/common/clock.h"
-#include "src/marketdata/instrument_repo.h"
-#include "src/marketdata/provider.h"
-#include "src/trading/order_math.h"
-#include "src/trading/trading_store.h"
-#include "tests/fakes/auth/fake_session_store.h"
-#include "tests/fakes/common/fake_clock.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/fakes/marketdata/fake_market_data_provider.h"
-#include "tests/fakes/trading/fake_trading_store.h"
-#include "tests/support/status_matchers.h"
-#include "tests/support/symbol.h"
+#include "auth/crypto.h"
+#include "common/clock.h"
+#include "marketdata/instrument_repo.h"
+#include "marketdata/provider.h"
+#include "trading/order_math.h"
+#include "trading/trading_store.h"
+#include "fakes/auth/fake_session_store.h"
+#include "fakes/common/fake_clock.h"
+#include "fakes/db/fake_db.h"
+#include "fakes/marketdata/fake_market_data_provider.h"
+#include "fakes/trading/fake_trading_store.h"
+#include "support/status_matchers.h"
+#include "support/symbol.h"
 
 namespace firefly {
 namespace {

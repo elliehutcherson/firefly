@@ -1,4 +1,4 @@
-#include "src/db/row_reader.h"
+#include "db/row_reader.h"
 
 #include <optional>
 
@@ -6,8 +6,8 @@
 #include "absl/time/civil_time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/db/db_types.h"
-#include "tests/support/status_matchers.h"
+#include "db/db_types.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

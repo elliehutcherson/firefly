@@ -1,4 +1,4 @@
-#include "src/marketdata/candle_repo.h"
+#include "marketdata/candle_repo.h"
 
 #include <concepts>
 #include <cstddef>
@@ -15,10 +15,10 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/civil_time.h"
-#include "src/common/money.h"
-#include "src/common/status_macros.h"
-#include "src/db/db.h"
-#include "src/db/row_reader.h"
+#include "common/money.h"
+#include "common/status_macros.h"
+#include "db/db.h"
+#include "db/row_reader.h"
 
 namespace firefly {
 namespace {

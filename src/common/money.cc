@@ -1,4 +1,4 @@
-#include "src/common/money.h"
+#include "common/money.h"
 
 #include <cmath>
 #include <cstdint>
@@ -12,7 +12,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
-#include "src/common/status_macros.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 namespace {

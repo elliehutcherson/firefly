@@ -1,11 +1,11 @@
-#include "src/trading/market_calendar.h"
+#include "trading/market_calendar.h"
 
 #include <cstdint>
 #include <initializer_list>
 
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
-#include "src/common/clock.h"
+#include "common/clock.h"
 
 namespace firefly {
 namespace {

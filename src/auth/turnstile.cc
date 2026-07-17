@@ -1,4 +1,4 @@
-#include "src/auth/turnstile.h"
+#include "auth/turnstile.h"
 
 #include <optional>
 #include <string>
@@ -7,8 +7,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "nlohmann/json.hpp"
-#include "src/common/http.h"
-#include "src/common/status_macros.h"
+#include "common/http.h"
+#include "common/status_macros.h"
 
 namespace firefly {
 namespace {

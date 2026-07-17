@@ -1,4 +1,4 @@
-#include "src/common/clock.h"
+#include "common/clock.h"
 
 #include <memory>
 

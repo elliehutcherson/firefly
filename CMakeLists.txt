@@ -22,6 +22,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+include(CTest)
+include(GNUInstallDirs)
+
 # On macOS the system libraries come from Homebrew, and libpq/curl are keg-only
 # (not symlinked into the brew prefix), so find_package/pkg-config can't see
 # them without an explicit hint. Add each formula's prefix to the search paths.
@@ -41,7 +44,8 @@ if(APPLE)
 endif()
 
 # ## System C libraries (stable ABI, not worth building in-tree).
-# Everything else is a git submodule under include/ — see docs/ARCHITECTURE.md.
+# Everything else is a git submodule under third_party/ — see
+# docs/ARCHITECTURE.md.
 find_package(PostgreSQL QUIET)
 find_package(CURL QUIET)
 find_package(PkgConfig QUIET)
@@ -58,25 +62,29 @@ if(NOT PostgreSQL_FOUND OR NOT CURL_FOUND OR NOT SODIUM_FOUND)
   message(FATAL_ERROR "Missing system libraries. Install them with:\n${_install_hint}")
 endif()
 
-# googletest must precede abseil: abseil's test helpers (absl::status_matchers
-# etc.) link against the external GTest targets.
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-add_subdirectory(include/googletest)
+# When tests are enabled, googletest must precede abseil: abseil's test
+# helpers (absl::status_matchers etc.) link against the external GTest targets.
+if(BUILD_TESTING)
+  set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+  add_subdirectory(third_party/googletest)
+endif()
 
 set(ABSL_PROPAGATE_CXX_STD ON)
-set(ABSL_USE_EXTERNAL_GOOGLETEST ON)
-set(ABSL_FIND_GOOGLETEST OFF)
-set(ABSL_BUILD_TEST_HELPERS ON)
-add_subdirectory(include/abseil-cpp)
+set(ABSL_BUILD_TEST_HELPERS ${BUILD_TESTING})
+if(BUILD_TESTING)
+  set(ABSL_USE_EXTERNAL_GOOGLETEST ON)
+  set(ABSL_FIND_GOOGLETEST OFF)
+endif()
+add_subdirectory(third_party/abseil-cpp)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(include/nlohmann)
+add_subdirectory(third_party/nlohmann)
 
 set(SKIP_BUILD_TEST ON CACHE BOOL "" FORCE)
-add_subdirectory(include/libpqxx)
+add_subdirectory(third_party/libpqxx)
 
 set(CPR_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
-add_subdirectory(include/cpr)
+add_subdirectory(third_party/cpr)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(${PROJECT_SOURCE_DIR}/cmake/crow.cmake)
@@ -84,5 +92,6 @@ include(${PROJECT_SOURCE_DIR}/cmake/sodium.cmake)
 
 add_subdirectory(src)
 
-enable_testing()
-add_subdirectory(tests)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()

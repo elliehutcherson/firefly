@@ -1,13 +1,13 @@
-#include "src/auth/turnstile.h"
+#include "auth/turnstile.h"
 
 #include <optional>
 
 #include "absl/status/status.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/common/http.h"
-#include "tests/fakes/common/fake_http_client.h"
-#include "tests/support/status_matchers.h"
+#include "common/http.h"
+#include "fakes/common/fake_http_client.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

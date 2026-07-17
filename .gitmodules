@@ -1,21 +1,21 @@
-[submodule "include/abseil-cpp"]
-	path = include/abseil-cpp
+[submodule "third_party/abseil-cpp"]
+	path = third_party/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
-[submodule "include/googletest"]
-	path = include/googletest
+[submodule "third_party/googletest"]
+	path = third_party/googletest
 	url = https://github.com/google/googletest.git
-[submodule "include/crow"]
-	path = include/crow
+[submodule "third_party/crow"]
+	path = third_party/crow
 	url = https://github.com/CrowCpp/Crow.git
-[submodule "include/asio"]
-	path = include/asio
+[submodule "third_party/asio"]
+	path = third_party/asio
 	url = https://github.com/chriskohlhoff/asio.git
-[submodule "include/nlohmann"]
-	path = include/nlohmann
+[submodule "third_party/nlohmann"]
+	path = third_party/nlohmann
 	url = https://github.com/nlohmann/json.git
-[submodule "include/libpqxx"]
-	path = include/libpqxx
+[submodule "third_party/libpqxx"]
+	path = third_party/libpqxx
 	url = https://github.com/jtv/libpqxx.git
-[submodule "include/cpr"]
-	path = include/cpr
+[submodule "third_party/cpr"]
+	path = third_party/cpr
 	url = https://github.com/libcpr/cpr.git

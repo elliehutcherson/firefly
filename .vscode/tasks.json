@@ -4,13 +4,13 @@
     {
       "label": "cmake: configure",
       "type": "shell",
-      "command": "cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+      "command": "cmake --preset dev",
       "problemMatcher": []
     },
     {
       "label": "cmake: build",
       "type": "shell",
-      "command": "cmake --build build",
+      "command": "cmake --build --preset dev",
       "group": {
         "kind": "build",
         "isDefault": true

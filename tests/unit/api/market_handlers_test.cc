@@ -1,4 +1,4 @@
-#include "src/api/market_handlers.h"
+#include "api/market_handlers.h"
 
 #include <string>
 #include <vector>
@@ -10,14 +10,14 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "nlohmann/json.hpp"
-#include "src/common/clock.h"
-#include "src/marketdata/candle_repo.h"
-#include "src/marketdata/instrument_repo.h"
-#include "src/marketdata/provider.h"
-#include "tests/fakes/common/fake_clock.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/fakes/marketdata/fake_market_data_provider.h"
-#include "tests/support/status_matchers.h"
+#include "common/clock.h"
+#include "marketdata/candle_repo.h"
+#include "marketdata/instrument_repo.h"
+#include "marketdata/provider.h"
+#include "fakes/common/fake_clock.h"
+#include "fakes/db/fake_db.h"
+#include "fakes/marketdata/fake_market_data_provider.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

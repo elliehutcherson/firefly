@@ -1,4 +1,4 @@
-#include "src/marketdata/cached_instrument_store.h"
+#include "marketdata/cached_instrument_store.h"
 
 #include <functional>
 #include <string>
@@ -11,9 +11,9 @@
 #include "absl/synchronization/notification.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/marketdata/instrument_store.h"
-#include "tests/support/status_matchers.h"
-#include "tests/support/symbol.h"
+#include "marketdata/instrument_store.h"
+#include "support/status_matchers.h"
+#include "support/symbol.h"
 
 namespace firefly {
 namespace {

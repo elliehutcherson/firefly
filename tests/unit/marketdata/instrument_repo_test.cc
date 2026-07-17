@@ -1,4 +1,4 @@
-#include "src/marketdata/instrument_repo.h"
+#include "marketdata/instrument_repo.h"
 
 #include <string>
 #include <vector>
@@ -7,9 +7,9 @@
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/support/status_matchers.h"
-#include "tests/support/symbol.h"
+#include "fakes/db/fake_db.h"
+#include "support/status_matchers.h"
+#include "support/symbol.h"
 
 namespace firefly {
 namespace {

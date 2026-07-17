@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "src/common/symbol.h"
-#include "src/trading/order_math.h"
+#include "common/symbol.h"
+#include "trading/order_math.h"
 
 namespace firefly {
 

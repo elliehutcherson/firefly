@@ -1,4 +1,4 @@
-#include "src/common/symbol.h"
+#include "common/symbol.h"
 
 #include <cctype>
 #include <string>

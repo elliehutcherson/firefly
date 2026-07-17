@@ -1,4 +1,4 @@
-#include "src/jobs/daily_bar_sync.h"
+#include "jobs/daily_bar_sync.h"
 
 #include <string>
 #include <vector>
@@ -9,14 +9,14 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/marketdata/candle_repo.h"
-#include "src/marketdata/instrument_repo.h"
-#include "src/common/symbol.h"
-#include "src/marketdata/provider.h"
-#include "tests/fakes/common/fake_clock.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/fakes/marketdata/fake_market_data_provider.h"
-#include "tests/support/status_matchers.h"
+#include "marketdata/candle_repo.h"
+#include "marketdata/instrument_repo.h"
+#include "common/symbol.h"
+#include "marketdata/provider.h"
+#include "fakes/common/fake_clock.h"
+#include "fakes/db/fake_db.h"
+#include "fakes/marketdata/fake_market_data_provider.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

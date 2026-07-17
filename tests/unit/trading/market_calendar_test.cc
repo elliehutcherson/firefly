@@ -1,4 +1,4 @@
-#include "src/trading/market_calendar.h"
+#include "trading/market_calendar.h"
 
 #include <vector>
 
@@ -6,7 +6,7 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/common/clock.h"
+#include "common/clock.h"
 
 namespace firefly {
 namespace {

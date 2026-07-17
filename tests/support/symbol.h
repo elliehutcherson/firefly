@@ -2,7 +2,7 @@
 #define FIREFLY_TESTS_SUPPORT_SYMBOL_H_
 
 #include "absl/strings/string_view.h"
-#include "src/common/symbol.h"
+#include "common/symbol.h"
 
 namespace firefly {
 

@@ -1,8 +1,8 @@
-#include "src/api/server.h"
+#include "api/server.h"
 
 #include "absl/status/status.h"
 #include "gtest/gtest.h"
-#include "tests/fakes/db/fake_db.h"
+#include "fakes/db/fake_db.h"
 
 namespace firefly {
 namespace {

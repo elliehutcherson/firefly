@@ -1,4 +1,4 @@
-#include "src/marketdata/alpaca.h"
+#include "marketdata/alpaca.h"
 
 #include <string>
 #include <vector>
@@ -10,11 +10,11 @@
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/common/http.h"
-#include "src/marketdata/provider.h"
-#include "tests/fakes/common/fake_http_client.h"
-#include "tests/support/status_matchers.h"
-#include "tests/support/symbol.h"
+#include "common/http.h"
+#include "marketdata/provider.h"
+#include "fakes/common/fake_http_client.h"
+#include "support/status_matchers.h"
+#include "support/symbol.h"
 
 namespace firefly {
 namespace {

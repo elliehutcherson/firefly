@@ -1,4 +1,4 @@
-#include "src/api/trading_handlers.h"
+#include "api/trading_handlers.h"
 
 #include <cstdint>
 #include <string>
@@ -8,14 +8,14 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "nlohmann/json.hpp"
-#include "src/auth/session_auth.h"
-#include "src/auth/session_store.h"
-#include "src/common/money.h"
-#include "src/common/status_macros.h"
-#include "src/common/symbol.h"
-#include "src/marketdata/provider.h"
-#include "src/trading/market_calendar.h"
-#include "src/trading/order_math.h"
+#include "auth/session_auth.h"
+#include "auth/session_store.h"
+#include "common/money.h"
+#include "common/status_macros.h"
+#include "common/symbol.h"
+#include "marketdata/provider.h"
+#include "trading/market_calendar.h"
+#include "trading/order_math.h"
 
 namespace firefly {
 namespace {

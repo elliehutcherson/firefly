@@ -7,11 +7,11 @@
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "nlohmann/json.hpp"
-#include "src/auth/session_store.h"
-#include "src/auth/turnstile.h"
-#include "src/auth/user_store.h"
-#include "src/common/clock.h"
-#include "src/db/db.h"
+#include "auth/session_store.h"
+#include "auth/turnstile.h"
+#include "auth/user_store.h"
+#include "common/clock.h"
+#include "db/db.h"
 
 namespace firefly {
 

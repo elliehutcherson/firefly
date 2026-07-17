@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "src/common/symbol.h"
+#include "common/symbol.h"
 
 namespace firefly {
 

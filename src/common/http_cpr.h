@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "absl/status/statusor.h"
-#include "src/common/http.h"
+#include "common/http.h"
 
 // CprHttpClient is split out of http.cc into its own header so tests can
 // inject a fake transport without including cpr headers (see docs/STYLE.md:

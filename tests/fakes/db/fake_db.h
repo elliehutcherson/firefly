@@ -10,9 +10,9 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "src/db/db.h"
-#include "tests/fakes/db/fake_db_types.h"
-#include "tests/fakes/db/fake_transaction.h"
+#include "db/db.h"
+#include "fakes/db/fake_db_types.h"
+#include "fakes/db/fake_transaction.h"
 
 namespace firefly {
 

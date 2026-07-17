@@ -1,4 +1,4 @@
-#include "src/common/http.h"
+#include "common/http.h"
 
 #include <memory>
 #include <utility>
@@ -7,7 +7,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "cpr/cpr.h"  // IWYU pragma: keep
-#include "src/common/http_cpr.h"
+#include "common/http_cpr.h"
 
 namespace firefly {
 namespace {

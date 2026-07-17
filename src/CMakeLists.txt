@@ -28,7 +28,8 @@ add_library(firefly_lib
     trading/market_calendar.cc
     trading/order_math.cc
     trading/trading_repo.cc)
-target_include_directories(firefly_lib PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(firefly_lib PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
 target_link_libraries(firefly_lib PUBLIC
     absl::flat_hash_map
     absl::log
@@ -46,6 +47,10 @@ target_link_libraries(firefly_lib PRIVATE cpr::cpr PkgConfig::SODIUM)
 
 add_executable(firefly main.cc)
 target_link_libraries(firefly PRIVATE firefly_lib)
+install(
+    TARGETS firefly
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT Runtime)
 
 add_executable(alpaca_probe tools/alpaca_probe.cc)
 target_link_libraries(alpaca_probe PRIVATE firefly_lib)

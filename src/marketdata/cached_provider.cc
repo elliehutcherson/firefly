@@ -1,4 +1,4 @@
-#include "src/marketdata/cached_provider.h"
+#include "marketdata/cached_provider.h"
 
 #include <cstddef>
 #include <future>
@@ -12,7 +12,7 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/civil_time.h"
 #include "absl/time/time.h"
-#include "src/marketdata/provider.h"
+#include "marketdata/provider.h"
 
 namespace firefly {
 

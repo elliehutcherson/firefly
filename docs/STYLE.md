@@ -189,7 +189,8 @@ numbers). Brace placement is never a clang-tidy concern.
 
 - Files are `.cc` / `.h`, one class or tightly-related group per pair.
 - Header guards: `FIREFLY_<PATH>_<FILE>_H_` (e.g. `FIREFLY_API_SERVER_H_`).
-- Includes are rooted at the repo: `#include "src/api/server.h"`.
+- Production includes are rooted at `src/`: `#include "api/server.h"`.
+  Test-support includes are rooted at `tests/`: `#include "fakes/db/fake_db.h"`.
 - Include order (blank line between groups): related header first, then C
   system, C++ standard library, third-party, then project headers.
 - Third-party **umbrella headers** — ones that do nothing but re-`#include` a
@@ -204,7 +205,7 @@ numbers). Brace placement is never a clang-tidy concern.
   because the symbols we actually name (`cpr::Get`, `crow::SimpleApp`, ...) are
   defined in the sub-headers the umbrella pulls in, not in the umbrella itself.
   The canonical fix — an `// IWYU pragma: export` inside the umbrella — isn't
-  ours to make: these headers live in pinned submodules under `include/` that
+  ours to make: these headers live in pinned submodules under `third_party/` that
   we don't edit. The `keep` pragma on our include line suppresses the false
   positive without touching vendored code. Our own headers are never umbrellas,
   so they never need it — and leaving the diagnostic on means it still catches
@@ -215,6 +216,6 @@ numbers). Brace placement is never a clang-tidy concern.
 - Configuration comes from environment variables via `Config::FromEnv()`;
   don't read `getenv` elsewhere.
 - JSON in and out of the API uses nlohmann/json.
-- Dependencies are pinned git submodules under `include/`; only stable-ABI C
+- Dependencies are pinned git submodules under `third_party/`; only stable-ABI C
   libraries (libpq, libcurl, libsodium) come from the system. See
   [ARCHITECTURE.md](ARCHITECTURE.md) for the policy.

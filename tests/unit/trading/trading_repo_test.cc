@@ -1,4 +1,4 @@
-#include "src/trading/trading_repo.h"
+#include "trading/trading_repo.h"
 
 #include <cstdint>
 #include <optional>
@@ -8,10 +8,10 @@
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "src/common/symbol.h"
-#include "src/trading/order_math.h"
-#include "tests/fakes/db/fake_db.h"
-#include "tests/support/status_matchers.h"
+#include "common/symbol.h"
+#include "trading/order_math.h"
+#include "fakes/db/fake_db.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {

@@ -1,4 +1,4 @@
-#include "src/trading/order_math.h"
+#include "trading/order_math.h"
 
 #include <cstdint>
 #include <limits>
@@ -7,7 +7,7 @@
 #include "absl/status/statusor.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tests/support/status_matchers.h"
+#include "support/status_matchers.h"
 
 namespace firefly {
 namespace {
