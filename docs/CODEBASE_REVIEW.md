@@ -9,7 +9,7 @@ below are retained as the rationale and historical record. Implemented items:
 
 - transaction API and rollback-on-destruction semantics;
 - atomic signup using one transaction;
-- generic database infrastructure under `src/db/`;
+- generic database infrastructure under `backend/src/db/`;
 - checked `RowReader` and selective domain storage interfaces;
 - safe SQL error classification and public API status mapping;
 - bounded market-data caches and bounded connection-pool acquisition;
@@ -155,7 +155,7 @@ clear.
 Recommended target structure:
 
 ```text
-src/
+backend/src/
 ├── auth/
 │   ├── user_store.h          # domain records + narrow contract
 │   └── session_store.h
@@ -177,7 +177,7 @@ src/
 ```
 
 The implemented first step moves the database abstractions, connection pool,
-and shared SQL types into `src/db/`, while leaving repository implementations
+and shared SQL types into `backend/src/db/`, while leaving repository implementations
 beside their domains. The important rule is dependency direction: handlers and
 jobs should depend on domain-shaped storage contracts, while Postgres code
 depends on those contracts. A folder move by itself provides little value.
@@ -315,7 +315,7 @@ runtime dependency.
 
 1. Define transaction semantics and implement/test the pqxx transaction wrapper.
 2. Add an atomic auth signup operation and use the transaction API.
-3. Create `src/db/` and move generic DB/pool code without changing behavior.
+3. Create `backend/src/db/` and move generic DB/pool code without changing behavior.
 4. Extract a small checked `RowReader` and migrate repositories incrementally.
 5. Introduce domain storage interfaces as the auth/market modules are touched;
    split Postgres implementations into `db/postgres/` if that layout remains
@@ -332,7 +332,7 @@ Each step can be landed independently. Avoid a flag-day repository rewrite.
   migrations, application composition, handlers, jobs, providers, DB wrapper,
   connection pool, repositories, fakes, and representative tests.
 - Searched production and test code for pqxx exposure and database access.
-  pqxx is confined to `src/db/db.cc`, `src/db/connection_pool.cc`, and the
+  pqxx is confined to `backend/src/db/db.cc`, `backend/src/db/connection_pool.cc`, and the
   internal pool header, as intended.
 - Original review run: `./scripts/build_and_test.sh` passed 143/143 tests.
 - Final implementation run: 158/158 hermetic unit tests passed.

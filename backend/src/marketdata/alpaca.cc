@@ -154,7 +154,7 @@ AlpacaProvider::AlpacaProvider(AlpacaConfig config, HttpClient& http)
 
 absl::StatusOr<Trade> AlpacaProvider::GetLatestTrade(
     const Symbol& symbol) {
-  // Symbol is valid by construction (src/common/symbol.h): it can never
+  // Symbol is valid by construction (backend/src/common/symbol.h): it can never
   // smuggle path segments ("..") into the URL.
   ASSIGN_OR_RETURN(
       json body, GetJson(http_, config_,

@@ -11,7 +11,7 @@
 
 namespace firefly {
 
-// One OHLCV candle. Prices are e4 fixed point (src/common/money.h).
+// One OHLCV candle. Prices are e4 fixed point (backend/src/common/money.h).
 struct Bar {
   absl::Time time;
   int64_t open_e4 = 0;
@@ -31,7 +31,7 @@ struct Trade {
 // (see AlpacaProvider); everything above this interface is vendor-agnostic,
 // so a dead free tier costs one new adapter, not a rewrite.
 //
-// Symbols arrive pre-validated by construction (src/common/symbol.h).
+// Symbols arrive pre-validated by construction (backend/src/common/symbol.h).
 class MarketDataProvider {
  public:
   virtual ~MarketDataProvider() = default;

@@ -4,7 +4,7 @@ include(GoogleTest)
 # tests pay only for the support they include.
 add_library(firefly_test_support INTERFACE)
 target_include_directories(firefly_test_support INTERFACE
-    ${PROJECT_SOURCE_DIR}/tests)
+    ${PROJECT_SOURCE_DIR}/backend/tests)
 target_link_libraries(firefly_test_support INTERFACE
     firefly_lib
     absl::status_matchers
@@ -12,11 +12,15 @@ target_link_libraries(firefly_test_support INTERFACE
     GTest::gtest_main)
 
 # Keep target declaration uniform and attach an execution-category label to
-# every discovered GoogleTest case. Source paths mirror src/ under unit/.
+# every discovered GoogleTest case. Source paths mirror backend/src/ under unit/.
 function(firefly_add_test name source label)
   add_executable(${name} ${source})
   target_link_libraries(${name} PRIVATE firefly_test_support)
-  gtest_discover_tests(${name} PROPERTIES LABELS ${label})
+  # PRE_TEST avoids parallel POST_BUILD discovery processes sharing temporary
+  # files (observed with CMake 4.4) while preserving fully parallel builds.
+  gtest_discover_tests(${name}
+      DISCOVERY_MODE PRE_TEST
+      PROPERTIES LABELS ${label})
 endfunction()
 
 firefly_add_test(auth_handlers_test unit/api/auth_handlers_test.cc unit)

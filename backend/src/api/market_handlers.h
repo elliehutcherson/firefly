@@ -19,7 +19,8 @@ namespace firefly {
 // Every core validates the symbol against the instruments universe before
 // touching anything else — requests for unknown symbols never reach a
 // provider or bloat its cache (docs/ARCHITECTURE.md security checklist).
-// Prices serialize as 4-decimal strings, never floats (src/common/money.h).
+// Prices serialize as 4-decimal strings, never floats
+// (backend/src/common/money.h).
 
 // All borrowed, all non-owning. `provider` may be nullptr (no Alpaca
 // credentials): quote/intraday return Unavailable, daily still serves from

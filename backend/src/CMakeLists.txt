@@ -29,7 +29,7 @@ add_library(firefly_lib
     trading/order_math.cc
     trading/trading_repo.cc)
 target_include_directories(firefly_lib PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/backend/src>)
 target_link_libraries(firefly_lib PUBLIC
     absl::flat_hash_map
     absl::log

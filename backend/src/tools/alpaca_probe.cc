@@ -1,7 +1,7 @@
 // Smoke test for Alpaca credentials: fetches the latest trade and a week of
 // daily bars for one symbol, straight through the production provider.
 //
-//   APCA_API_KEY_ID=... APCA_API_SECRET_KEY=... ./build/bin/alpaca_probe
+//   APCA_API_KEY_ID=... APCA_API_SECRET_KEY=... ./build/dev/bin/alpaca_probe
 //   [SYMBOL]
 
 #include <memory>

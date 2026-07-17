@@ -86,8 +86,8 @@ static SPA, so no server-side templating is needed.
 | Password hashing (argon2id), random tokens | libsodium | system `libsodium-dev` |
 | Tests | googletest | git submodule |
 
-Dependency policy: **git submodules under `third_party/`, built with
-`add_subdirectory` or a small interface target in `cmake/`** (see zebes).
+Dependency policy: **git submodules under `backend/third_party/`, built with
+`add_subdirectory` or a small interface target in `backend/cmake/`** (see zebes).
 Only stable-ABI C libraries come from the system (libpq, libcurl, libsodium);
 the Dockerfile pins them for production.
 
@@ -99,7 +99,7 @@ clients.
 The binary is a **modular monolith**:
 
 ```
-src/
+backend/src/
 ├── api/         HTTP layer: routes, middleware (auth, rate limit), serialization
 ├── auth/        signup/login, argon2id, sessions, Turnstile verification
 ├── marketdata/  provider interface, Alpaca adapter, caches, coalescing
@@ -183,7 +183,7 @@ Both are **precomputed by background jobs, never at request time**:
 
 ## Database schema (summary)
 
-See `migrations/` for the source of truth.
+See `backend/migrations/` for the source of truth.
 
 | Table | Purpose |
 |---|---|
@@ -197,7 +197,7 @@ See `migrations/` for the source of truth.
 | `movers` | precomputed movers lists |
 | `leaderboard` | precomputed rankings per period |
 
-Migrations are plain SQL files in `migrations/`, applied in order by
+Migrations are plain SQL files in `backend/migrations/`, applied in order by
 `scripts/migrate.sh` (records applied files in `schema_migrations`, one
 transaction per file).
 

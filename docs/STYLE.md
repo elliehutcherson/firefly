@@ -19,7 +19,7 @@ linting by `.clang-tidy` — run both before sending code for review.
   for bit patterns and modular arithmetic.
 - All cash amounts are integer cents in `int64_t`; prices are e4 fixed point
   (`int64_t`, 1/10000 dollar — matches the DB's `NUMERIC(14,4)`), converted
-  from JSON via `src/common/money.h`. Never represent money as a floating
+  from JSON via `backend/src/common/money.h`. Never represent money as a floating
   point value.
 
 ## Declaration order
@@ -114,23 +114,23 @@ with `absl::Status` / `absl::StatusOr<T>`. Assertions (`CHECK`-style) are for
 programming errors only, never for conditions that can occur at runtime.
 
 - Propagate errors with `RETURN_IF_ERROR` and `ASSIGN_OR_RETURN` from
-  `src/common/status_macros.h` — these two are the sanctioned exception to
+  `backend/src/common/status_macros.h` — these two are the sanctioned exception to
   the no-macros rule. Don't hand-write `if (!status.ok()) return status;`.
 - In tests, assert with `EXPECT_OK`/`ASSERT_OK`
-  (`tests/support/status_matchers.h`)
+  (`backend/tests/support/status_matchers.h`)
   and match error codes with `absl_testing::StatusIs` — never a bare
   `EXPECT_FALSE(result.ok())`, which passes for the *wrong* error.
 
 ## Test organization
 
-- `tests/unit/` mirrors `src/`; keep one test file per production class or
+- `backend/tests/unit/` mirrors `backend/src/`; keep one test file per production class or
   cohesive production source file.
-- `tests/integration/` contains tests that cross a real infrastructure or
-  vendor boundary. `tests/e2e/` is reserved for tests that exercise the full
+- `backend/tests/integration/` contains tests that cross a real infrastructure or
+  vendor boundary. `backend/tests/e2e/` is reserved for tests that exercise the full
   application through its public interface.
-- Shared fakes live under `tests/fakes/<domain>/`. A fake used by only one test
+- Shared fakes live under `backend/tests/fakes/<domain>/`. A fake used by only one test
   stays local to that test file.
-- `tests/fuzz/` and `tests/performance/` are created only for actual fuzz
+- `backend/tests/fuzz/` and `backend/tests/performance/` are created only for actual fuzz
   targets and benchmarks. Timing assertions are not performance tests.
 - Unit tests are hermetic and run by default. Integration and e2e tests must
   be labeled accordingly in CMake.
@@ -189,8 +189,9 @@ numbers). Brace placement is never a clang-tidy concern.
 
 - Files are `.cc` / `.h`, one class or tightly-related group per pair.
 - Header guards: `FIREFLY_<PATH>_<FILE>_H_` (e.g. `FIREFLY_API_SERVER_H_`).
-- Production includes are rooted at `src/`: `#include "api/server.h"`.
-  Test-support includes are rooted at `tests/`: `#include "fakes/db/fake_db.h"`.
+- Production includes are rooted at `backend/src/`: `#include "api/server.h"`.
+  Test-support includes are rooted at `backend/tests/`:
+  `#include "fakes/db/fake_db.h"`.
 - Include order (blank line between groups): related header first, then C
   system, C++ standard library, third-party, then project headers.
 - Third-party **umbrella headers** — ones that do nothing but re-`#include` a
@@ -205,7 +206,8 @@ numbers). Brace placement is never a clang-tidy concern.
   because the symbols we actually name (`cpr::Get`, `crow::SimpleApp`, ...) are
   defined in the sub-headers the umbrella pulls in, not in the umbrella itself.
   The canonical fix — an `// IWYU pragma: export` inside the umbrella — isn't
-  ours to make: these headers live in pinned submodules under `third_party/` that
+  ours to make: these headers live in pinned submodules under
+  `backend/third_party/` that
   we don't edit. The `keep` pragma on our include line suppresses the false
   positive without touching vendored code. Our own headers are never umbrellas,
   so they never need it — and leaving the diagnostic on means it still catches
@@ -216,6 +218,6 @@ numbers). Brace placement is never a clang-tidy concern.
 - Configuration comes from environment variables via `Config::FromEnv()`;
   don't read `getenv` elsewhere.
 - JSON in and out of the API uses nlohmann/json.
-- Dependencies are pinned git submodules under `third_party/`; only stable-ABI C
+- Dependencies are pinned git submodules under `backend/third_party/`; only stable-ABI C
   libraries (libpq, libcurl, libsodium) come from the system. See
   [ARCHITECTURE.md](ARCHITECTURE.md) for the policy.

@@ -5,6 +5,6 @@ find_package(Threads REQUIRED)
 
 add_library(crow INTERFACE)
 target_include_directories(crow SYSTEM INTERFACE
-    ${CMAKE_SOURCE_DIR}/third_party/crow/include
-    ${CMAKE_SOURCE_DIR}/third_party/asio/asio/include)
+    ${CMAKE_SOURCE_DIR}/backend/third_party/crow/include
+    ${CMAKE_SOURCE_DIR}/backend/third_party/asio/asio/include)
 target_link_libraries(crow INTERFACE Threads::Threads)

@@ -44,7 +44,7 @@ if(APPLE)
 endif()
 
 # ## System C libraries (stable ABI, not worth building in-tree).
-# Everything else is a git submodule under third_party/ — see
+# Everything else is a git submodule under backend/third_party/ — see
 # docs/ARCHITECTURE.md.
 find_package(PostgreSQL QUIET)
 find_package(CURL QUIET)
@@ -66,7 +66,7 @@ endif()
 # helpers (absl::status_matchers etc.) link against the external GTest targets.
 if(BUILD_TESTING)
   set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-  add_subdirectory(third_party/googletest)
+  add_subdirectory(backend/third_party/googletest)
 endif()
 
 set(ABSL_PROPAGATE_CXX_STD ON)
@@ -75,23 +75,19 @@ if(BUILD_TESTING)
   set(ABSL_USE_EXTERNAL_GOOGLETEST ON)
   set(ABSL_FIND_GOOGLETEST OFF)
 endif()
-add_subdirectory(third_party/abseil-cpp)
+add_subdirectory(backend/third_party/abseil-cpp)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(third_party/nlohmann)
+add_subdirectory(backend/third_party/nlohmann)
 
 set(SKIP_BUILD_TEST ON CACHE BOOL "" FORCE)
-add_subdirectory(third_party/libpqxx)
+add_subdirectory(backend/third_party/libpqxx)
 
 set(CPR_USE_SYSTEM_CURL ON CACHE BOOL "" FORCE)
-add_subdirectory(third_party/cpr)
+add_subdirectory(backend/third_party/cpr)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-include(${PROJECT_SOURCE_DIR}/cmake/crow.cmake)
-include(${PROJECT_SOURCE_DIR}/cmake/sodium.cmake)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/backend/cmake ${CMAKE_MODULE_PATH})
+include(${PROJECT_SOURCE_DIR}/backend/cmake/crow.cmake)
+include(${PROJECT_SOURCE_DIR}/backend/cmake/sodium.cmake)
 
-add_subdirectory(src)
-
-if(BUILD_TESTING)
-  add_subdirectory(tests)
-endif()
+add_subdirectory(backend)

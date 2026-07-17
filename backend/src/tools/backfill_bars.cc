@@ -4,7 +4,7 @@
 // crashed or interrupted run just picks up where it left off.
 //
 //   APCA_API_KEY_ID=... APCA_API_SECRET_KEY=... DATABASE_URL=... \
-//     ./build/bin/backfill_bars [--years=7] [--delay_ms=400] \
+//     ./build/dev/bin/backfill_bars [--years=7] [--delay_ms=400] \
 //     [--symbols=AAPL,MSFT]
 //
 // STOCK SPLITS: bars are stored split-adjusted as of fetch time. If a symbol
@@ -13,7 +13,7 @@
 // re-backfilling just that symbol:
 //
 //   psql "$DATABASE_URL" -c "DELETE FROM candles_daily WHERE symbol = 'XYZ'"
-//   ./build/bin/backfill_bars --symbols=XYZ
+//   ./build/dev/bin/backfill_bars --symbols=XYZ
 
 #include <memory>
 #include <string>

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Applies migrations/*.sql in lexical order, once each, recording applied
+# Applies backend/migrations/*.sql in lexical order, once each, recording applied
 # files in schema_migrations. Each migration runs in a single transaction.
 #
 # Uses local psql with $DATABASE_URL if available, otherwise falls back to
@@ -36,7 +36,7 @@ run_sql -c "CREATE TABLE IF NOT EXISTS schema_migrations (
     filename TEXT PRIMARY KEY,
     applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"
 
-for f in migrations/*.sql; do
+for f in backend/migrations/*.sql; do
   name="$(basename "$f")"
   applied="$(run_sql -c "SELECT 1 FROM schema_migrations WHERE filename = '$name'")"
   if [[ -n "$applied" ]]; then

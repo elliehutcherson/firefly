@@ -18,7 +18,7 @@ namespace firefly {
 // `max_size`, then callers block until one is released.
 //
 // Internal to the Db wrapper — this header names pqxx types, and pqxx must
-// not leak past src/db/* (see docs/STYLE.md). Include it only from the
+// not leak past backend/src/db/* (see docs/STYLE.md). Include it only from the
 // database implementation.
 class ConnectionPool {
  public:

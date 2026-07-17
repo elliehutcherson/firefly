@@ -17,6 +17,26 @@
       },
       "problemMatcher": ["$gcc"],
       "dependsOn": "cmake: configure"
+    },
+    {
+      "label": "frontend: check",
+      "type": "npm",
+      "script": "check",
+      "path": "frontend/",
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend: build",
+      "type": "npm",
+      "script": "build",
+      "path": "frontend/",
+      "problemMatcher": []
+    },
+    {
+      "label": "build: all",
+      "dependsOrder": "parallel",
+      "dependsOn": ["cmake: build", "frontend: build"],
+      "problemMatcher": []
     }
   ]
 }
