@@ -53,6 +53,11 @@ firefly_add_test(trading_repo_test unit/trading/trading_repo_test.cc unit)
 # Real Postgres; self-skips when the configured database is unreachable.
 firefly_add_test(db_test integration/db/db_test.cc integration)
 
+# Real Postgres; proves rollback and FOR-UPDATE serialization that scripted
+# fakes cannot. Self-skips like db_test.
+firefly_add_test(trading_repo_integration_test
+    integration/trading/trading_repo_test.cc integration)
+
 # Real Alpaca API; self-skips without API credentials.
 firefly_add_test(alpaca_live_test
     integration/marketdata/alpaca_live_test.cc integration)
